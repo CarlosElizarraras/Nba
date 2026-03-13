@@ -107,6 +107,17 @@
   .conf-bracket-label.east{background:rgba(59,125,216,.15);color:var(--east-c);border:1px solid rgba(59,125,216,.3);}
   .conf-bracket-label.west{background:rgba(212,63,63,.15);color:var(--west-c);border:1px solid rgba(212,63,63,.3);}
 
+  /* PLAY-IN */
+  .playin-section{margin-bottom:16px;}
+  .playin-title{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2.5px;color:#60a5fa;margin-bottom:8px;padding:4px 0;border-bottom:1px solid rgba(96,165,250,.2);}
+  .playin-grid{display:flex;gap:12px;flex-wrap:wrap;}
+  .playin-game{background:var(--surface2);border:1px solid rgba(96,165,250,.25);border-radius:8px;overflow:hidden;width:174px;flex-shrink:0;}
+  .playin-game-header{background:rgba(96,165,250,.12);padding:3px 8px;font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:1.5px;color:#60a5fa;display:flex;justify-content:space-between;align-items:center;}
+  .playin-game-badge{background:#60a5fa;color:#000;border-radius:3px;padding:1px 5px;font-size:9px;letter-spacing:1px;}
+  .playin-result{font-size:9px;color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;}
+  .playin-arrow{display:flex;align-items:center;padding:3px 8px 4px;gap:5px;font-size:10px;color:var(--muted);}
+  .playin-arrow-icon{font-size:12px;}
+
   .bracket-grid{display:flex;gap:20px;align-items:flex-start;}
   .bracket-col{display:flex;flex-direction:column;width:180px;}
   .bc-title{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);text-align:center;padding:5px 0 10px;border-bottom:1px solid rgba(200,168,75,.2);margin-bottom:12px;}
@@ -119,9 +130,15 @@
   .b-team:last-child{border-bottom:none;}
   .b-team.winner{background:rgba(200,168,75,.1);font-weight:700;}
   .b-team.loser{opacity:.4;}
+  .b-team.pi-winner{background:rgba(96,165,250,.1);font-weight:700;}
+  .b-team.pi-loser{opacity:.4;}
+  .b-team.eliminated{opacity:.25;text-decoration:line-through;}
   .b-seed{font-family:'Bebas Neue',sans-serif;font-size:10px;color:var(--muted);min-width:12px;margin-right:5px;}
   .b-name{flex:1;font-size:12px;}
   .b-wins{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--accent);min-width:16px;text-align:right;}
+  .b-score{font-family:'Bebas Neue',sans-serif;font-size:14px;min-width:16px;text-align:right;}
+  .b-score.high{color:var(--green);}
+  .b-score.low{color:var(--red);}
   .b-wins.tbd{color:var(--muted);font-size:10px;}
   .b-series{padding:3px 10px 5px;font-size:10px;color:var(--muted);display:flex;gap:6px;}
   .b-series-val{color:var(--text2);}
@@ -308,29 +325,77 @@
     </div>
 
     <div class="ap-section" id="atab-playoffs">
-      <div class="af"><label>Conferencia</label>
-        <select id="ap-conf">
-          <option value="east">Este</option>
-          <option value="west">Oeste</option>
+      <div class="af"><label>Sección</label>
+        <select id="ap-section">
+          <option value="playin">Play-In Tournament</option>
+          <option value="playoffs">Playoffs</option>
           <option value="finals">Finales NBA</option>
         </select>
       </div>
-      <div class="af"><label>Ronda</label>
-        <select id="ap-round">
-          <option value="r1">Primera Ronda</option>
-          <option value="semi">Semifinales de Conf.</option>
-          <option value="conf">Final de Conf.</option>
-        </select>
+
+      <!-- Play-in fields -->
+      <div id="ap-playin-fields">
+        <div class="af"><label>Conferencia</label>
+          <select id="ap-pi-conf">
+            <option value="east">Este</option>
+            <option value="west">Oeste</option>
+          </select>
+        </div>
+        <div class="af"><label>Juego</label>
+          <select id="ap-pi-game">
+            <option value="g1">Juego 1: #7 vs #8 (→ Seed 7)</option>
+            <option value="g2">Juego 2: #9 vs #10 (→ G3 o fuera)</option>
+            <option value="g3">Juego 3: Decisivo (→ Seed 8)</option>
+          </select>
+        </div>
+        <div class="af"><label>Marcador (PTS Local – PTS Visitante)</label>
+          <div class="score-row">
+            <input id="ap-pi-h" type="number" min="0" max="200" value="110" style="text-align:center">
+            <span class="score-sep">—</span>
+            <input id="ap-pi-a" type="number" min="0" max="200" value="105" style="text-align:center">
+          </div>
+        </div>
+        <button class="btn-reg" id="btn-pi-reg">REGISTRAR PLAY-IN</button>
+        <div class="ap-feedback" id="fb-pi"></div>
       </div>
-      <div class="af"><label>Serie</label><select id="ap-match"></select></div>
-      <div class="af"><label>Victorias Local</label>
-        <input id="ap-hw" type="number" min="0" max="4" value="0">
+
+      <!-- Playoffs series fields -->
+      <div id="ap-playoffs-fields" style="display:none">
+        <div class="af"><label>Conferencia</label>
+          <select id="ap-conf">
+            <option value="east">Este</option>
+            <option value="west">Oeste</option>
+          </select>
+        </div>
+        <div class="af"><label>Ronda</label>
+          <select id="ap-round">
+            <option value="r1">Primera Ronda</option>
+            <option value="semi">Semifinales de Conf.</option>
+            <option value="conf">Final de Conf.</option>
+          </select>
+        </div>
+        <div class="af"><label>Serie</label><select id="ap-match"></select></div>
+        <div class="af"><label>Victorias Local</label>
+          <input id="ap-hw" type="number" min="0" max="4" value="0">
+        </div>
+        <div class="af"><label>Victorias Visitante</label>
+          <input id="ap-aw" type="number" min="0" max="4" value="0">
+        </div>
+        <button class="btn-reg" id="btn-playoffs-reg">REGISTRAR SERIE</button>
+        <div class="ap-feedback" id="fb-playoffs"></div>
       </div>
-      <div class="af"><label>Victorias Visitante</label>
-        <input id="ap-aw" type="number" min="0" max="4" value="0">
+
+      <!-- Finals fields -->
+      <div id="ap-finals-fields" style="display:none">
+        <div class="af"><label>Victorias Este</label>
+          <input id="ap-fw-e" type="number" min="0" max="4" value="0">
+        </div>
+        <div class="af"><label>Victorias Oeste</label>
+          <input id="ap-fw-o" type="number" min="0" max="4" value="0">
+        </div>
+        <button class="btn-reg" id="btn-finals-reg">REGISTRAR FINALES</button>
+        <div class="ap-feedback" id="fb-finals"></div>
       </div>
-      <button class="btn-reg" id="btn-playoffs-reg">REGISTRAR SERIE</button>
-      <div class="ap-feedback" id="fb-playoffs"></div>
     </div>
 
     <div class="ap-section" id="atab-settings">
@@ -427,15 +492,38 @@ const DEFAULT_WEST = [
   {id:'SAC', pj:67,w:16,l:51,home:'11-23',away:'5-28', div:'2-10',conf:'10-34',ppa:110.6,ppp:120.9,streak:'P1',l10:'4-6'},
 ];
 
-// Playoffs: series entre top-8 de cada conf + Finales
-// wins: [local_wins, away_wins], null = TBD
+// ══════════════════════════════════════════════════════════
+//  PLAY-IN + PLAYOFFS DATA
+// ══════════════════════════════════════════════════════════
+// Play-in: 3 juegos por conferencia
+//   g1: #7 vs #8  → ganador = seed 7 playoffs; perdedor sigue vivo
+//   g2: #9 vs #10 → ganador sigue vivo; perdedor eliminado
+//   g3: perdedor(g1) vs ganador(g2) → ganador = seed 8 playoffs; perdedor eliminado
+//
+// Estructura de cada juego de play-in:
+//   { home, homeS, away, awayS, score:[pts_home, pts_away] }
+//   score null = no jugado aún
+//
+const DEFAULT_PLAYIN = {
+  east:{
+    g1:{home:'TOR',homeS:7,away:'ATL', awayS:8, score:null},
+    g2:{home:'PHI',homeS:9,away:'CHA', awayS:10,score:null},
+    g3:{home:'TBD',homeS:'L7/8',away:'TBD',awayS:'G9/10',score:null},
+  },
+  west:{
+    g1:{home:'LAC',homeS:7,away:'GS',  awayS:8, score:null},
+    g2:{home:'POR',homeS:9,away:'PHX', awayS:10,score:null},
+    g3:{home:'TBD',homeS:'L7/8',away:'TBD',awayS:'G9/10',score:null},
+  },
+};
+
 const DEFAULT_PLAYOFFS = {
   east:{
     r1:[
-      {home:'DET',homeS:1,away:'ATL', awayS:8,wins:[0,0]},
-      {home:'BOS',homeS:2,away:'TOR', awayS:7,wins:[0,0]},
-      {home:'NY', homeS:3,away:'MIA', awayS:6,wins:[0,0]},
-      {home:'CLE',homeS:4,away:'ORL', awayS:5,wins:[0,0]},
+      {home:'DET',homeS:1,away:'TBD(8)',awayS:8, wins:[0,0]},
+      {home:'BOS',homeS:2,away:'MIA',   awayS:6, wins:[0,0]},
+      {home:'NY', homeS:3,away:'ORL',   awayS:5, wins:[0,0]},
+      {home:'CLE',homeS:4,away:'TBD(7)',awayS:7, wins:[0,0]},
     ],
     semi:[
       {home:'TBD',homeS:1,away:'TBD',awayS:8,wins:[0,0]},
@@ -447,10 +535,10 @@ const DEFAULT_PLAYOFFS = {
   },
   west:{
     r1:[
-      {home:'OKC',homeS:1,away:'LAC', awayS:8,wins:[0,0]},
-      {home:'SA', homeS:2,away:'GS',  awayS:7,wins:[0,0]},
-      {home:'LAL',homeS:3,away:'MIN', awayS:6,wins:[0,0]},
-      {home:'HOU',homeS:4,away:'DEN', awayS:5,wins:[0,0]},
+      {home:'OKC',homeS:1,away:'TBD(8)',awayS:8, wins:[0,0]},
+      {home:'SA', homeS:2,away:'MIN',   awayS:6, wins:[0,0]},
+      {home:'LAL',homeS:3,away:'DEN',   awayS:5, wins:[0,0]},
+      {home:'HOU',homeS:4,away:'TBD(7)',awayS:7, wins:[0,0]},
     ],
     semi:[
       {home:'TBD',homeS:1,away:'TBD',awayS:8,wins:[0,0]},
@@ -469,6 +557,7 @@ const DEFAULT_PLAYOFFS = {
 let state = {
   east: JSON.parse(JSON.stringify(DEFAULT_EAST)),
   west: JSON.parse(JSON.stringify(DEFAULT_WEST)),
+  playin: JSON.parse(JSON.stringify(DEFAULT_PLAYIN)),
   playoffs: JSON.parse(JSON.stringify(DEFAULT_PLAYOFFS)),
 };
 let editCtx = {conf: null, id: null};
@@ -579,23 +668,131 @@ document.getElementById('modal-save').addEventListener('click', () => {
 });
 
 // ══════════════════════════════════════════════════════════
-//  RENDER PLAYOFFS
+//  RENDER PLAYOFFS + PLAY-IN
 // ══════════════════════════════════════════════════════════
 const ROUND_LABELS = {r1:'Primera Ronda', semi:'Semis de Conf.', conf:'Final de Conf.'};
+
+function abbr(id) { return TEAMS_META[id] ? TEAMS_META[id].abbr : id; }
+
+// Derive play-in results: who is seed 7, 8, and who's eliminated
+function getPlayinResults(confKey) {
+  const pi = state.playin[confKey];
+  const result = { seed7: null, seed8: null, eliminated: [] };
+
+  const g1 = pi.g1.score;
+  const g2 = pi.g2.score;
+  const g3 = pi.g3.score;
+
+  // Game 1: #7 vs #8
+  let g1winner = null, g1loser = null;
+  if(g1) {
+    g1winner = g1[0] > g1[1] ? pi.g1.home : pi.g1.away;
+    g1loser  = g1[0] > g1[1] ? pi.g1.away : pi.g1.home;
+    result.seed7 = g1winner;
+  }
+
+  // Game 2: #9 vs #10
+  let g2winner = null, g2loser = null;
+  if(g2) {
+    g2winner = g2[0] > g2[1] ? pi.g2.home : pi.g2.away;
+    g2loser  = g2[0] > g2[1] ? pi.g2.away : pi.g2.home;
+    result.eliminated.push(g2loser);
+  }
+
+  // Game 3: loser(g1) vs winner(g2)
+  if(g3) {
+    const g3winner = g3[0] > g3[1] ? pi.g3.home : pi.g3.away;
+    const g3loser  = g3[0] > g3[1] ? pi.g3.away : pi.g3.home;
+    result.seed8 = g3winner;
+    result.eliminated.push(g3loser);
+  }
+
+  return result;
+}
+
+function renderPlayinGame(game, gameLabel, resultTag, resultNote) {
+  const s = game.score;
+  const played = s !== null;
+  const winner = played ? (s[0] > s[1] ? 'home' : 'away') : null;
+  const homeName = abbr(game.home);
+  const awayName = abbr(game.away);
+  const hw1 = winner === 'home' ? 'pi-winner' : winner === 'away' ? 'pi-loser' : '';
+  const hw2 = winner === 'away' ? 'pi-winner' : winner === 'home' ? 'pi-loser' : '';
+
+  return `<div class="playin-game">
+    <div class="playin-game-header">
+      <span>${gameLabel}</span>
+      <span class="playin-game-badge">${resultTag}</span>
+    </div>
+    <div class="b-team ${hw1}">
+      <span class="b-seed">${game.homeS}</span>
+      <span class="b-name">${homeName}</span>
+      <span class="b-score ${played?(s[0]>s[1]?'high':'low'):''}">${played?s[0]:'–'}</span>
+    </div>
+    <div class="b-team ${hw2}">
+      <span class="b-seed">${game.awayS}</span>
+      <span class="b-name">${awayName}</span>
+      <span class="b-score ${played?(s[1]>s[0]?'high':'low'):''}">${played?s[1]:'–'}</span>
+    </div>
+    <div class="playin-arrow"><span class="playin-arrow-icon">→</span><span>${resultNote}</span></div>
+  </div>`;
+}
+
+function renderPlayinSection(confKey) {
+  const pi = state.playin[confKey];
+  // Update g3 teams based on g1/g2 results
+  const g1 = pi.g1.score, g2 = pi.g2.score;
+  if(g1) {
+    pi.g3.home = g1[0] > g1[1] ? pi.g1.away : pi.g1.home;
+    pi.g3.homeS = pi.g3.home !== 'TBD' ? `L(${abbr(g1[0]>g1[1]?pi.g1.home:pi.g1.away)})` : 'L7/8';
+  }
+  if(g2) {
+    pi.g3.away = g2[0] > g2[1] ? pi.g2.home : pi.g2.away;
+    pi.g3.awayS = pi.g3.away !== 'TBD' ? `G(${abbr(g2[0]>g2[1]?pi.g2.home:pi.g2.away)})` : 'G9/10';
+  }
+
+  let html = `<div class="playin-section">`;
+  html += `<div class="playin-title">🎟 PLAY-IN TOURNAMENT</div>`;
+  html += `<div class="playin-grid">`;
+  html += renderPlayinGame(pi.g1, 'Juego 1 · #7 vs #8', '→ SEED 7', 'Ganador → Playoffs #7 · Perdedor juega G3');
+  html += renderPlayinGame(pi.g2, 'Juego 2 · #9 vs #10', '→ G3 o FUERA', 'Ganador → G3 · Perdedor eliminado');
+  html += renderPlayinGame(pi.g3, 'Juego 3 · Decisivo', '→ SEED 8', 'Ganador → Playoffs #8 · Perdedor eliminado');
+  html += `</div></div>`;
+  return html;
+}
 
 function renderPlayoffsBracket() {
   const p = state.playoffs;
   let html = '<div class="bracket-outer">';
 
   // EAST
-  html += renderConfBracket('east', p.east, 'CONFERENCIA ESTE', 'east');
+  html += `<div class="conf-bracket-section">`;
+  html += `<div class="conf-bracket-label east">CONFERENCIA ESTE</div>`;
+  html += renderPlayinSection('east');
+  html += `<div class="bracket-grid">`;
+  ['r1','semi','conf'].forEach(r => {
+    html += `<div class="bracket-col"><div class="bc-title">${ROUND_LABELS[r]}</div>`;
+    p.east[r].forEach(m => { html += renderSeries(m, false); });
+    html += '</div>';
+  });
+  html += `</div></div>`;
+
   // WEST
-  html += renderConfBracket('west', p.west, 'CONFERENCIA OESTE', 'west');
+  html += `<div class="conf-bracket-section">`;
+  html += `<div class="conf-bracket-label west">CONFERENCIA OESTE</div>`;
+  html += renderPlayinSection('west');
+  html += `<div class="bracket-grid">`;
+  ['r1','semi','conf'].forEach(r => {
+    html += `<div class="bracket-col"><div class="bc-title">${ROUND_LABELS[r]}</div>`;
+    p.west[r].forEach(m => { html += renderSeries(m, false); });
+    html += '</div>';
+  });
+  html += `</div></div>`;
+
   // FINALS
   html += '<div style="margin-top:4px">';
   html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:13px;letter-spacing:3px;color:var(--accent);margin-bottom:10px;text-align:center">🏆 FINALES NBA</div>';
-  html += '<div style="display:flex;justify-content:center">';
-  html += '<div style="width:200px">';
+  html += '<div style="display:flex;justify-content:center"><div style="width:200px">';
   p.finals.forEach(m => { html += renderSeries(m, true); });
   html += '</div></div></div>';
 
@@ -603,28 +800,12 @@ function renderPlayoffsBracket() {
   document.getElementById('playoffs-bracket').innerHTML = html;
 }
 
-function renderConfBracket(confKey, confData, label, cls) {
-  let html = `<div class="conf-bracket-section">`;
-  html += `<div class="conf-bracket-label ${cls}">${label}</div>`;
-  html += `<div class="bracket-grid">`;
-  const rounds = ['r1','semi','conf'];
-  rounds.forEach(r => {
-    const roundData = confData[r];
-    if(!roundData) return;
-    html += `<div class="bracket-col"><div class="bc-title">${ROUND_LABELS[r]}</div>`;
-    roundData.forEach(m => { html += renderSeries(m, false); });
-    html += '</div>';
-  });
-  html += '</div></div>';
-  return html;
-}
-
 function renderSeries(m, isFinals) {
   const hw = m.wins[0], aw = m.wins[1];
   const hasData = hw > 0 || aw > 0;
   const winner = hw >= 4 ? 'home' : aw >= 4 ? 'away' : null;
-  const homeName = TEAMS_META[m.home] ? TEAMS_META[m.home].abbr : m.home;
-  const awayName = TEAMS_META[m.away] ? TEAMS_META[m.away].abbr : m.away;
+  const homeName = abbr(m.home);
+  const awayName = abbr(m.away);
   const w1 = winner === 'home' ? 'winner' : winner === 'away' ? 'loser' : '';
   const w2 = winner === 'away' ? 'winner' : winner === 'home' ? 'loser' : '';
   const scoreStr = hasData ? `${hw}–${aw}` : '–';
@@ -641,7 +822,7 @@ function renderSeries(m, isFinals) {
     <span class="b-name">${awayName}</span>
     <span class="b-wins${!hasData?' tbd':''}">${hasData?aw:'TBD'}</span>
   </div>`;
-  if(!isFinals && hasData) {
+  if(hasData) {
     html += `<div class="b-series">Serie: <span class="b-series-val">${scoreStr}</span></div>`;
   }
   html += '</div>';
@@ -694,44 +875,66 @@ document.getElementById('btn-game-reg').addEventListener('click', () => {
 });
 
 // ══════════════════════════════════════════════════════════
-//  ADMIN: PLAYOFFS
+//  ADMIN: PLAYOFFS / PLAY-IN
 // ══════════════════════════════════════════════════════════
-const apConf = document.getElementById('ap-conf');
-const apRound = document.getElementById('ap-round');
-const apMatch = document.getElementById('ap-match');
+const apSection = document.getElementById('ap-section');
+const apConf    = document.getElementById('ap-conf');
+const apRound   = document.getElementById('ap-round');
+const apMatch   = document.getElementById('ap-match');
+
+function togglePlayoffFields() {
+  const v = apSection.value;
+  document.getElementById('ap-playin-fields').style.display  = v==='playin'   ? 'block' : 'none';
+  document.getElementById('ap-playoffs-fields').style.display = v==='playoffs' ? 'block' : 'none';
+  document.getElementById('ap-finals-fields').style.display  = v==='finals'   ? 'block' : 'none';
+}
+apSection.addEventListener('change', () => { togglePlayoffFields(); fillPlayoffMatches(); });
 
 function fillPlayoffMatches() {
-  const confKey = apConf.value;
-  const roundKey = apRound.value;
-  if(confKey === 'finals') {
-    apMatch.innerHTML = state.playoffs.finals.map((m,i)=>`<option value="${i}">${m.home} vs ${m.away}</option>`).join('');
-    apRound.disabled = true;
-    return;
-  }
-  apRound.disabled = false;
-  const matches = state.playoffs[confKey]?.[roundKey] || [];
-  apMatch.innerHTML = matches.map((m,i)=>`<option value="${i}">${m.home} vs ${m.away}</option>`).join('');
+  if(!apConf || !apRound) return;
+  const matches = state.playoffs[apConf.value]?.[apRound.value] || [];
+  apMatch.innerHTML = matches.map((m,i)=>`<option value="${i}">${abbr(m.home)} vs ${abbr(m.away)}</option>`).join('');
 }
 apConf.addEventListener('change', fillPlayoffMatches);
 apRound.addEventListener('change', fillPlayoffMatches);
 
+// Play-in register
+document.getElementById('btn-pi-reg').addEventListener('click', () => {
+  const confKey  = document.getElementById('ap-pi-conf').value;
+  const gameKey  = document.getElementById('ap-pi-game').value;
+  const h = parseInt(document.getElementById('ap-pi-h').value)||0;
+  const a = parseInt(document.getElementById('ap-pi-a').value)||0;
+  const fb = document.getElementById('fb-pi');
+  if(h === a) { showFb(fb, 'Empate no permitido en NBA', true); return; }
+  const game = state.playin[confKey][gameKey];
+  game.score = [h, a];
+  renderPlayoffsBracket(); persistState();
+  showFb(fb, `✓ ${abbr(game.home)} ${h}–${a} ${abbr(game.away)}`);
+});
+
+// Playoffs series register
 document.getElementById('btn-playoffs-reg').addEventListener('click', () => {
-  const confKey = apConf.value;
+  const confKey  = apConf.value;
   const roundKey = apRound.value;
   const mi = parseInt(apMatch.value);
   const hw = parseInt(document.getElementById('ap-hw').value)||0;
   const aw = parseInt(document.getElementById('ap-aw').value)||0;
   const fb = document.getElementById('fb-playoffs');
-  let m;
-  if(confKey === 'finals') {
-    m = state.playoffs.finals[mi];
-  } else {
-    m = state.playoffs[confKey]?.[roundKey]?.[mi];
-  }
+  const m = state.playoffs[confKey]?.[roundKey]?.[mi];
   if(!m) return;
   m.wins = [hw, aw];
   renderPlayoffsBracket(); persistState();
-  showFb(fb, `✓ ${m.home} ${hw}–${aw} ${m.away}`);
+  showFb(fb, `✓ ${abbr(m.home)} ${hw}–${aw} ${abbr(m.away)}`);
+});
+
+// Finals register
+document.getElementById('btn-finals-reg').addEventListener('click', () => {
+  const we = parseInt(document.getElementById('ap-fw-e').value)||0;
+  const wo = parseInt(document.getElementById('ap-fw-o').value)||0;
+  const fb = document.getElementById('fb-finals');
+  state.playoffs.finals[0].wins = [we, wo];
+  renderPlayoffsBracket(); persistState();
+  showFb(fb, `✓ Este ${we}–${wo} Oeste`);
 });
 
 // ══════════════════════════════════════════════════════════
@@ -761,6 +964,7 @@ document.getElementById('btn-import').addEventListener('change', ev => {
       if(!confirm(`¿Reemplazar todos los datos?\n\nNo se puede deshacer.`)){ ev.target.value=''; return; }
       state.east = payload.east;
       state.west = payload.west;
+      state.playin = payload.playin || JSON.parse(JSON.stringify(DEFAULT_PLAYIN));
       state.playoffs = payload.playoffs;
       fillAllTeams(); fillPlayoffMatches(); renderAll(); persistState();
       showFb(fb,`✓ Importado`);
@@ -775,6 +979,7 @@ document.getElementById('btn-reset').addEventListener('click', () => {
   if(!confirm('¿Resetear TODOS los datos?\n\nNo se puede deshacer.')) return;
   state.east = JSON.parse(JSON.stringify(DEFAULT_EAST));
   state.west = JSON.parse(JSON.stringify(DEFAULT_WEST));
+  state.playin = JSON.parse(JSON.stringify(DEFAULT_PLAYIN));
   state.playoffs = JSON.parse(JSON.stringify(DEFAULT_PLAYOFFS));
   fillAllTeams(); fillPlayoffMatches(); renderAll(); persistState();
   showFb(fb,'✓ Datos reseteados');
@@ -815,11 +1020,13 @@ function boot() {
     if(saved && saved.east && saved.west && saved.playoffs) {
       state.east = saved.east;
       state.west = saved.west;
+      state.playin = saved.playin || JSON.parse(JSON.stringify(DEFAULT_PLAYIN));
       state.playoffs = saved.playoffs;
     }
   } catch {}
   fillAllTeams();
   fillPlayoffMatches();
+  togglePlayoffFields();
   document.getElementById('loadingOverlay').classList.add('hidden');
   renderAll();
 }
