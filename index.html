@@ -588,6 +588,10 @@ function renderConf(conf) {
     if(pb !== pa) return pb - pa;
     return (b.w - b.l) - (a.w - a.l);
   });
+  // Update games played badge with max PJ in conference
+  const maxPJ = Math.max(...state[conf].map(t => t.pj));
+  const badge = document.getElementById(`gp-${conf}`);
+  if(badge) badge.textContent = `J${maxPJ}`;
   const tbody = document.querySelector(`#table-${conf} tbody`);
   let html = '';
   data.forEach((t, i) => {
