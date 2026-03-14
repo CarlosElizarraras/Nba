@@ -787,31 +787,50 @@ function renderPlayoffsBracket() {
   const p = state.playoffs;
   let html = '<div class="bracket-outer">';
 
-  // EAST
-  html += `<div class="conf-bracket-section">`;
-  html += `<div class="conf-bracket-label east">CONFERENCIA ESTE</div>`;
-  html += renderPlayinSection('east');
-  html += `<div class="bracket-grid">`;
-  ['r1','semi','conf'].forEach(r => {
-    html += `<div class="bracket-col"><div class="bc-title">${ROUND_LABELS[r]}</div>`;
-    p.east[r].forEach(m => { html += renderSeries(m, false); });
-    html += '</div>';
-  });
-  html += `</div></div>`;
+  ['east','west'].forEach(confKey => {
+    const cd = p[confKey];
+    const label = confKey==='east' ? 'CONFERENCIA ESTE' : 'CONFERENCIA OESTE';
+    // r1 order: index 0=1v8, 1=2v7, 2=3v6, 3=4v5
+    // Visual grouping: top half = 1v8 + 4v5, bottom half = 2v7 + 3v6
+    // so winners of top half meet in semis[0], winners of bottom half in semis[1]
+    const r1 = cd.r1;
+    const sep = `<div style="height:6px"></div>`;
+    const grpLabel = t => `<div style="font-size:9px;color:var(--muted);letter-spacing:1px;padding:1px 4px;margin-bottom:2px">${t}</div>`;
 
-  // WEST
-  html += `<div class="conf-bracket-section">`;
-  html += `<div class="conf-bracket-label west">CONFERENCIA OESTE</div>`;
-  html += renderPlayinSection('west');
-  html += `<div class="bracket-grid">`;
-  ['r1','semi','conf'].forEach(r => {
-    html += `<div class="bracket-col"><div class="bc-title">${ROUND_LABELS[r]}</div>`;
-    p.west[r].forEach(m => { html += renderSeries(m, false); });
-    html += '</div>';
-  });
-  html += `</div></div>`;
+    html += `<div class="conf-bracket-section">`;
+    html += `<div class="conf-bracket-label ${confKey}">${label}</div>`;
+    html += renderPlayinSection(confKey);
+    html += `<div class="bracket-grid">`;
 
-  // FINALS
+    // Col 1: Primera Ronda — 1v8, 4v5, gap, 2v7, 3v6
+    html += `<div class="bracket-col"><div class="bc-title">Primera Ronda</div>`;
+    html += grpLabel('MITAD SUPERIOR');
+    html += renderSeries(r1[0], false); // 1 vs 8
+    html += renderSeries(r1[3], false); // 4 vs 5
+    html += sep;
+    html += grpLabel('MITAD INFERIOR');
+    html += renderSeries(r1[1], false); // 2 vs 7
+    html += renderSeries(r1[2], false); // 3 vs 6
+    html += `</div>`;
+
+    // Col 2: Semis — semi[0] (ganadores mitad superior), semi[1] (ganadores mitad inferior)
+    html += `<div class="bracket-col"><div class="bc-title">Semis de Conf.</div>`;
+    html += grpLabel('MITAD SUPERIOR');
+    html += renderSeries(cd.semi[0], false);
+    html += sep;
+    html += grpLabel('MITAD INFERIOR');
+    html += renderSeries(cd.semi[1], false);
+    html += `</div>`;
+
+    // Col 3: Final de conf
+    html += `<div class="bracket-col"><div class="bc-title">Final de Conf.</div>`;
+    html += renderSeries(cd.conf[0], false);
+    html += `</div>`;
+
+    html += `</div></div>`;
+  });
+
+  // Finales NBA
   html += '<div style="margin-top:4px">';
   html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:13px;letter-spacing:3px;color:var(--accent);margin-bottom:10px;text-align:center">🏆 FINALES NBA</div>';
   html += '<div style="display:flex;justify-content:center"><div style="width:200px">';
