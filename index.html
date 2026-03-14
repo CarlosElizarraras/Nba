@@ -500,55 +500,69 @@ const DEFAULT_WEST = [
 //   g2: #9 vs #10 → ganador sigue vivo; perdedor eliminado
 //   g3: perdedor(g1) vs ganador(g2) → ganador = seed 8 playoffs; perdedor eliminado
 //
-// Estructura de cada juego de play-in:
-//   { home, homeS, away, awayS, score:[pts_home, pts_away] }
-//   score null = no jugado aún
-//
 const DEFAULT_PLAYIN = {
   east:{
-    g1:{home:'TOR',homeS:7,away:'ATL', awayS:8, score:null},
-    g2:{home:'PHI',homeS:9,away:'CHA', awayS:10,score:null},
-    g3:{home:'TBD',homeS:'L7/8',away:'TBD',awayS:'G9/10',score:null},
+    // ATL(7) ganó a BOS(8) → seed 7. MIA(10) ganó a CHA(9) → G3. MIA ganó a BOS → seed 8.
+    g1:{home:'ATL',homeS:7, away:'BOS_pi',awayS:8, score:[117,101]},
+    g2:{home:'CHA',homeS:9, away:'MIA',   awayS:10,score:[112,114]},
+    g3:{home:'BOS_pi',homeS:'L7/8',away:'MIA',awayS:'G9/10',score:[114,118]},
   },
   west:{
-    g1:{home:'LAC',homeS:7,away:'GS',  awayS:8, score:null},
-    g2:{home:'POR',homeS:9,away:'PHX', awayS:10,score:null},
-    g3:{home:'TBD',homeS:'L7/8',away:'TBD',awayS:'G9/10',score:null},
+    // GS(7) ganó a LAC(8) → seed 7. MEM(9) ganó a DAL(10) → G3. MEM ganó a LAC → seed 8.
+    g1:{home:'GS', homeS:7, away:'LAC',   awayS:8, score:[115,105]},
+    g2:{home:'MEM',homeS:9, away:'DAL',   awayS:10,score:[120,109]},
+    g3:{home:'LAC',homeS:'L7/8',away:'MEM',awayS:'G9/10',score:[105,112]},
   },
 };
 
+// Cruces reales 2025: #1 vs #8, #2 vs #7, #3 vs #6, #4 vs #5
 const DEFAULT_PLAYOFFS = {
   east:{
     r1:[
-      {home:'DET',homeS:1,away:'TBD(8)',awayS:8, wins:[0,0]},
-      {home:'BOS',homeS:2,away:'MIA',   awayS:6, wins:[0,0]},
-      {home:'NY', homeS:3,away:'ORL',   awayS:5, wins:[0,0]},
-      {home:'CLE',homeS:4,away:'TBD(7)',awayS:7, wins:[0,0]},
+      // CLE(1) vs MIA(8) → CLE barrió 4-0
+      {home:'CLE',homeS:1, away:'MIA',awayS:8, wins:[4,0]},
+      // BOS(2) vs ORL(7) → BOS ganó 4-1
+      {home:'BOS',homeS:2, away:'ORL',awayS:7, wins:[4,1]},
+      // NY(3)  vs DET(6) → NY ganó 4-2
+      {home:'NY', homeS:3, away:'DET',awayS:6, wins:[4,2]},
+      // IND(4) vs MIL(5) → IND ganó 4-1
+      {home:'IND',homeS:4, away:'MIL',awayS:5, wins:[4,1]},
     ],
     semi:[
-      {home:'TBD',homeS:1,away:'TBD',awayS:8,wins:[0,0]},
-      {home:'TBD',homeS:2,away:'TBD',awayS:7,wins:[0,0]},
+      // CLE(1) vs IND(4) → IND ganó 4-1 (upset)
+      {home:'CLE',homeS:1, away:'IND',awayS:4, wins:[1,4]},
+      // NY(3)  vs BOS(2) → NY ganó 4-2
+      {home:'NY', homeS:3, away:'BOS',awayS:2, wins:[4,2]},
     ],
     conf:[
-      {home:'TBD',homeS:1,away:'TBD',awayS:4,wins:[0,0]},
+      // IND vs NY → IND ganó 4-2
+      {home:'IND',homeS:4, away:'NY',awayS:3, wins:[4,2]},
     ],
   },
   west:{
     r1:[
-      {home:'OKC',homeS:1,away:'TBD(8)',awayS:8, wins:[0,0]},
-      {home:'SA', homeS:2,away:'MIN',   awayS:6, wins:[0,0]},
-      {home:'LAL',homeS:3,away:'DEN',   awayS:5, wins:[0,0]},
-      {home:'HOU',homeS:4,away:'TBD(7)',awayS:7, wins:[0,0]},
+      // OKC(1) vs MEM(8) → OKC barrió 4-0
+      {home:'OKC',homeS:1, away:'MEM',awayS:8, wins:[4,0]},
+      // HOU(2) vs GS(7)  → GS ganó 4-3 (upset)
+      {home:'HOU',homeS:2, away:'GS', awayS:7, wins:[3,4]},
+      // LAL(3) vs MIN(6) → MIN ganó 4-1
+      {home:'LAL',homeS:3, away:'MIN',awayS:6, wins:[1,4]},
+      // DEN(4) vs LAC(5) → DEN ganó 4-3
+      {home:'DEN',homeS:4, away:'LAC',awayS:5, wins:[4,3]},
     ],
     semi:[
-      {home:'TBD',homeS:1,away:'TBD',awayS:8,wins:[0,0]},
-      {home:'TBD',homeS:2,away:'TBD',awayS:7,wins:[0,0]},
+      // OKC(1) vs DEN(4) → OKC ganó 4-3
+      {home:'OKC',homeS:1, away:'DEN',awayS:4, wins:[4,3]},
+      // GS(7)  vs MIN(6) → MIN ganó 4-1
+      {home:'GS', homeS:7, away:'MIN',awayS:6, wins:[1,4]},
     ],
     conf:[
-      {home:'TBD',homeS:1,away:'TBD',awayS:4,wins:[0,0]},
+      // OKC vs MIN → OKC ganó 4-1
+      {home:'OKC',homeS:1, away:'MIN',awayS:6, wins:[4,1]},
     ],
   },
-  finals:[{home:'TBD',homeS:'E',away:'TBD',awayS:'O',wins:[0,0]}],
+  // Finales: OKC(O) vs IND(E) → OKC ganó 4-3
+  finals:[{home:'IND',homeS:'E', away:'OKC',awayS:'O', wins:[3,4]}],
 };
 
 // ══════════════════════════════════════════════════════════
@@ -676,7 +690,11 @@ document.getElementById('modal-save').addEventListener('click', () => {
 // ══════════════════════════════════════════════════════════
 const ROUND_LABELS = {r1:'Primera Ronda', semi:'Semis de Conf.', conf:'Final de Conf.'};
 
-function abbr(id) { return TEAMS_META[id] ? TEAMS_META[id].abbr : id; }
+function abbr(id) {
+  if(!id) return 'TBD';
+  const clean = id.replace(/_pi$/,''); // strip play-in suffix
+  return TEAMS_META[clean] ? TEAMS_META[clean].abbr : id;
+}
 
 // Derive play-in results: who is seed 7, 8, and who's eliminated
 function getPlayinResults(confKey) {
