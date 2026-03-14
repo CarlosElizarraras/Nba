@@ -519,49 +519,38 @@ const DEFAULT_PLAYIN = {
 const DEFAULT_PLAYOFFS = {
   east:{
     r1:[
-      // CLE(1) vs MIA(8) → CLE barrió 4-0
-      {home:'CLE',homeS:1, away:'MIA',awayS:8, wins:[4,0]},
-      // BOS(2) vs ORL(7) → BOS ganó 4-1
-      {home:'BOS',homeS:2, away:'ORL',awayS:7, wins:[4,1]},
-      // NY(3)  vs DET(6) → NY ganó 4-2
-      {home:'NY', homeS:3, away:'DET',awayS:6, wins:[4,2]},
-      // IND(4) vs MIL(5) → IND ganó 4-1
-      {home:'IND',homeS:4, away:'MIL',awayS:5, wins:[4,1]},
+      // — MITAD SUPERIOR: ganadores se cruzan en semis[0] —
+      {home:'CLE',homeS:1, away:'MIA', awayS:8, wins:[4,0]}, // 1v8
+      {home:'IND',homeS:4, away:'MIL', awayS:5, wins:[4,1]}, // 4v5
+      // — MITAD INFERIOR: ganadores se cruzan en semis[1] —
+      {home:'BOS',homeS:2, away:'ORL', awayS:7, wins:[4,1]}, // 2v7
+      {home:'NY', homeS:3, away:'DET', awayS:6, wins:[4,2]}, // 3v6
     ],
     semi:[
-      // CLE(1) vs IND(4) → IND ganó 4-1 (upset)
-      {home:'CLE',homeS:1, away:'IND',awayS:4, wins:[1,4]},
-      // NY(3)  vs BOS(2) → NY ganó 4-2
-      {home:'NY', homeS:3, away:'BOS',awayS:2, wins:[4,2]},
+      {home:'CLE',homeS:1, away:'IND',awayS:4, wins:[1,4]}, // ganadores mitad superior
+      {home:'NY', homeS:3, away:'BOS',awayS:2, wins:[4,2]}, // ganadores mitad inferior
     ],
     conf:[
-      // IND vs NY → IND ganó 4-2
       {home:'IND',homeS:4, away:'NY',awayS:3, wins:[4,2]},
     ],
   },
   west:{
     r1:[
-      // OKC(1) vs MEM(8) → OKC barrió 4-0
-      {home:'OKC',homeS:1, away:'MEM',awayS:8, wins:[4,0]},
-      // HOU(2) vs GS(7)  → GS ganó 4-3 (upset)
-      {home:'HOU',homeS:2, away:'GS', awayS:7, wins:[3,4]},
-      // LAL(3) vs MIN(6) → MIN ganó 4-1
-      {home:'LAL',homeS:3, away:'MIN',awayS:6, wins:[1,4]},
-      // DEN(4) vs LAC(5) → DEN ganó 4-3
-      {home:'DEN',homeS:4, away:'LAC',awayS:5, wins:[4,3]},
+      // — MITAD SUPERIOR —
+      {home:'OKC',homeS:1, away:'MEM', awayS:8, wins:[4,0]}, // 1v8
+      {home:'DEN',homeS:4, away:'LAC', awayS:5, wins:[4,3]}, // 4v5
+      // — MITAD INFERIOR —
+      {home:'HOU',homeS:2, away:'GS',  awayS:7, wins:[3,4]}, // 2v7
+      {home:'LAL',homeS:3, away:'MIN', awayS:6, wins:[1,4]}, // 3v6
     ],
     semi:[
-      // OKC(1) vs DEN(4) → OKC ganó 4-3
-      {home:'OKC',homeS:1, away:'DEN',awayS:4, wins:[4,3]},
-      // GS(7)  vs MIN(6) → MIN ganó 4-1
-      {home:'GS', homeS:7, away:'MIN',awayS:6, wins:[1,4]},
+      {home:'OKC',homeS:1, away:'DEN',awayS:4, wins:[4,3]}, // ganadores mitad superior
+      {home:'GS', homeS:7, away:'MIN',awayS:6, wins:[1,4]}, // ganadores mitad inferior
     ],
     conf:[
-      // OKC vs MIN → OKC ganó 4-1
       {home:'OKC',homeS:1, away:'MIN',awayS:6, wins:[4,1]},
     ],
   },
-  // Finales: OKC(O) vs IND(E) → OKC ganó 4-3
   finals:[{home:'IND',homeS:'E', away:'OKC',awayS:'O', wins:[3,4]}],
 };
 
@@ -806,11 +795,11 @@ function renderPlayoffsBracket() {
     html += `<div class="bracket-col"><div class="bc-title">Primera Ronda</div>`;
     html += grpLabel('MITAD SUPERIOR');
     html += renderSeries(r1[0], false); // 1 vs 8
-    html += renderSeries(r1[3], false); // 4 vs 5
+    html += renderSeries(r1[1], false); // 4 vs 5
     html += sep;
     html += grpLabel('MITAD INFERIOR');
-    html += renderSeries(r1[1], false); // 2 vs 7
-    html += renderSeries(r1[2], false); // 3 vs 6
+    html += renderSeries(r1[2], false); // 2 vs 7
+    html += renderSeries(r1[3], false); // 3 vs 6
     html += `</div>`;
 
     // Col 2: Semis — semi[0] (ganadores mitad superior), semi[1] (ganadores mitad inferior)
