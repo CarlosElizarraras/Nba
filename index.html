@@ -76,6 +76,8 @@
   .pos-num{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--text2);width:22px;text-align:center;display:inline-block;}
   .team-cell{display:flex;align-items:center;gap:8px;font-weight:500;font-size:13px;}
   .team-abbr{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;min-width:34px;}
+  .team-logo{width:22px;height:22px;object-fit:contain;flex-shrink:0;}
+  .b-logo{width:17px;height:17px;object-fit:contain;flex-shrink:0;}
   .team-name-full{color:var(--text2);font-size:12px;display:none;}
   @media(min-width:400px){.team-name-full{display:inline;}}
   .pct{font-family:'Bebas Neue',sans-serif;font-size:16px;font-weight:400;color:var(--text);}
@@ -421,6 +423,51 @@
 
 <script>
 // ══════════════════════════════════════════════════════════
+//  NBA TEAM LOGOS (cdn.nba.com)
+// ══════════════════════════════════════════════════════════
+// Source: https://cdn.nba.com/logos/nba/{TEAM_ID}/global/L/logo.svg
+const NBA_LOGO_IDS = {
+  // East
+  DET:  '1610612765', // Detroit Pistons
+  BOS:  '1610612738', // Boston Celtics
+  NY:   '1610612752', // New York Knicks
+  CLE:  '1610612739', // Cleveland Cavaliers
+  ORL:  '1610612753', // Orlando Magic
+  MIA:  '1610612748', // Miami Heat
+  TOR:  '1610612761', // Toronto Raptors
+  ATL:  '1610612737', // Atlanta Hawks
+  PHI:  '1610612755', // Philadelphia 76ers
+  CHA:  '1610612766', // Charlotte Hornets
+  MIL:  '1610612749', // Milwaukee Bucks
+  CHI:  '1610612741', // Chicago Bulls
+  BKN:  '1610612751', // Brooklyn Nets
+  WSH:  '1610612764', // Washington Wizards
+  IND:  '1610612754', // Indiana Pacers
+  // West
+  OKC:  '1610612760', // Oklahoma City Thunder
+  SA:   '1610612759', // San Antonio Spurs
+  LAL:  '1610612747', // Los Angeles Lakers
+  HOU:  '1610612745', // Houston Rockets
+  DEN:  '1610612743', // Denver Nuggets
+  MIN:  '1610612750', // Minnesota Timberwolves
+  PHX:  '1610612756', // Phoenix Suns
+  LAC:  '1610612746', // LA Clippers
+  GS:   '1610612744', // Golden State Warriors
+  POR:  '1610612757', // Portland Trail Blazers
+  MEM:  '1610612763', // Memphis Grizzlies
+  DAL:  '1610612742', // Dallas Mavericks
+  NO:   '1610612740', // New Orleans Pelicans
+  UTAH: '1610612762', // Utah Jazz
+  SAC:  '1610612758', // Sacramento Kings
+};
+
+function teamLogo(id, size=22, cls='team-logo') {
+  const nbaId = NBA_LOGO_IDS[id];
+  if(!nbaId) return '';
+  return `<img class="${cls}" src="https://cdn.nba.com/logos/nba/${nbaId}/global/L/logo.svg" alt="${id}" width="${size}" height="${size}" loading="lazy" onerror="this.style.display='none'">`;
+}
+
+// ══════════════════════════════════════════════════════════
 //  DEFAULT DATA
 // ══════════════════════════════════════════════════════════
 const TEAMS_META = {
@@ -609,7 +656,7 @@ function renderConf(conf) {
     }
     html += `<tr class="${zoneClass(pos)}" data-conf="${conf}" data-id="${t.id}">
       <td><span class="pos-num">${pos}</span></td>
-      <td><div class="team-cell"><span class="team-abbr">${m.abbr}</span><span class="team-name-full">${m.name.replace(/^[A-Z]+ /,'')}</span></div></td>
+      <td><div class="team-cell">${teamLogo(t.id,22,'team-logo')}<span class="team-abbr">${m.abbr}</span><span class="team-name-full">${m.name.replace(/^[A-Z]+ /,'')}</span></div></td>
       <td>${t.pj}</td>
       <td><span class="wins">${t.w}</span></td>
       <td><span class="losses">${t.l}</span></td>
@@ -644,7 +691,7 @@ function openEditModal(conf, id) {
   if(!t) return;
   const m = TEAMS_META[id] || {name:id};
   editCtx = {conf, id};
-  document.getElementById('modal-team-title').textContent = `✏️ ${m.abbr} ${m.name}`;
+  document.getElementById('modal-team-title').innerHTML = `✏️ ${teamLogo(id,18,'team-logo')} ${m.abbr} ${m.name}`;
   document.getElementById('ef-pj').value = t.pj;
   document.getElementById('ef-w').value  = t.w;
   document.getElementById('ef-l').value  = t.l;
@@ -737,11 +784,13 @@ function renderPlayinGame(game, gameLabel, resultTag, resultNote) {
     </div>
     <div class="b-team ${hw1}">
       <span class="b-seed">${game.homeS}</span>
+      ${teamLogo(game.home,15,'b-logo')}
       <span class="b-name">${homeName}</span>
       <span class="b-score ${played?(s[0]>s[1]?'high':'low'):''}">${played?s[0]:'–'}</span>
     </div>
     <div class="b-team ${hw2}">
       <span class="b-seed">${game.awayS}</span>
+      ${teamLogo(game.away,15,'b-logo')}
       <span class="b-name">${awayName}</span>
       <span class="b-score ${played?(s[1]>s[0]?'high':'low'):''}">${played?s[1]:'–'}</span>
     </div>
@@ -890,11 +939,13 @@ function renderSeries(m, isFinals) {
   if(isFinals) html += `<div class="finals-header">🏆 FINALES NBA 2025</div>`;
   html += `<div class="b-team ${w1}">
     <span class="b-seed">${m.homeS}</span>
+    ${teamLogo(m.home,17,'b-logo')}
     <span class="b-name">${homeName}</span>
     <span class="b-wins${!hasData?' tbd':''}">${hasData?hw:'TBD'}</span>
   </div>`;
   html += `<div class="b-team ${w2}">
     <span class="b-seed">${m.awayS}</span>
+    ${teamLogo(m.away,17,'b-logo')}
     <span class="b-name">${awayName}</span>
     <span class="b-wins${!hasData?' tbd':''}">${hasData?aw:'TBD'}</span>
   </div>`;
