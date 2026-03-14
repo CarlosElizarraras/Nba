@@ -519,39 +519,39 @@ const DEFAULT_PLAYIN = {
 const DEFAULT_PLAYOFFS = {
   east:{
     r1:[
-      // — MITAD SUPERIOR: ganadores se cruzan en semis[0] —
-      {home:'CLE',homeS:1, away:'MIA', awayS:8, wins:[4,0]}, // 1v8
-      {home:'IND',homeS:4, away:'MIL', awayS:5, wins:[4,1]}, // 4v5
-      // — MITAD INFERIOR: ganadores se cruzan en semis[1] —
-      {home:'BOS',homeS:2, away:'ORL', awayS:7, wins:[4,1]}, // 2v7
-      {home:'NY', homeS:3, away:'DET', awayS:6, wins:[4,2]}, // 3v6
+      // MITAD SUPERIOR: 1v8 y 4v5
+      {home:'DET',homeS:1, away:'ATL', awayS:8, wins:[0,0]}, // 1 DET vs 8 ATL (play-in)
+      {home:'CLE',homeS:4, away:'ORL', awayS:5, wins:[0,0]}, // 4 CLE vs 5 ORL
+      // MITAD INFERIOR: 2v7 y 3v6
+      {home:'BOS',homeS:2, away:'TOR', awayS:7, wins:[0,0]}, // 2 BOS vs 7 TOR (play-in)
+      {home:'NY', homeS:3, away:'MIA', awayS:6, wins:[0,0]}, // 3 NY  vs 6 MIA
     ],
     semi:[
-      {home:'CLE',homeS:1, away:'IND',awayS:4, wins:[1,4]}, // ganadores mitad superior
-      {home:'NY', homeS:3, away:'BOS',awayS:2, wins:[4,2]}, // ganadores mitad inferior
+      {home:'TBD',homeS:1,away:'TBD',awayS:4,wins:[0,0]},
+      {home:'TBD',homeS:2,away:'TBD',awayS:3,wins:[0,0]},
     ],
     conf:[
-      {home:'IND',homeS:4, away:'NY',awayS:3, wins:[4,2]},
+      {home:'TBD',homeS:'E1',away:'TBD',awayS:'E2',wins:[0,0]},
     ],
   },
   west:{
     r1:[
-      // — MITAD SUPERIOR —
-      {home:'OKC',homeS:1, away:'MEM', awayS:8, wins:[4,0]}, // 1v8
-      {home:'DEN',homeS:4, away:'LAC', awayS:5, wins:[4,3]}, // 4v5
-      // — MITAD INFERIOR —
-      {home:'HOU',homeS:2, away:'GS',  awayS:7, wins:[3,4]}, // 2v7
-      {home:'LAL',homeS:3, away:'MIN', awayS:6, wins:[1,4]}, // 3v6
+      // MITAD SUPERIOR: 1v8 y 4v5
+      {home:'OKC',homeS:1, away:'LAC', awayS:8, wins:[0,0]}, // 1 OKC vs 8 LAC (play-in)
+      {home:'HOU',homeS:4, away:'DEN', awayS:5, wins:[0,0]}, // 4 HOU vs 5 DEN
+      // MITAD INFERIOR: 2v7 y 3v6
+      {home:'SA', homeS:2, away:'GS',  awayS:7, wins:[0,0]}, // 2 SA  vs 7 GS  (play-in)
+      {home:'LAL',homeS:3, away:'MIN', awayS:6, wins:[0,0]}, // 3 LAL vs 6 MIN
     ],
     semi:[
-      {home:'OKC',homeS:1, away:'DEN',awayS:4, wins:[4,3]}, // ganadores mitad superior
-      {home:'GS', homeS:7, away:'MIN',awayS:6, wins:[1,4]}, // ganadores mitad inferior
+      {home:'TBD',homeS:1,away:'TBD',awayS:4,wins:[0,0]},
+      {home:'TBD',homeS:2,away:'TBD',awayS:3,wins:[0,0]},
     ],
     conf:[
-      {home:'OKC',homeS:1, away:'MIN',awayS:6, wins:[4,1]},
+      {home:'TBD',homeS:'O1',away:'TBD',awayS:'O2',wins:[0,0]},
     ],
   },
-  finals:[{home:'IND',homeS:'E', away:'OKC',awayS:'O', wins:[3,4]}],
+  finals:[{home:'TBD',homeS:'E',away:'TBD',awayS:'O',wins:[0,0]}],
 };
 
 // ══════════════════════════════════════════════════════════
