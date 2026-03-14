@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>NBA Tracker 2024/25</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#06080d;--surface:#0d1117;--surface2:#131920;--surface3:#1a2230;
+    --border:#1e2a3a;--border2:#263347;--text:#e8edf5;--text2:#8899aa;
+    --muted:#3d5068;--accent:#c8a84b;--accent2:#e8c96a;
+    --east-c:#3b7dd8;--west-c:#d43f3f;--green:#22c55e;--red:#ef4444;
+    --header-h:54px;--nav-h:44px;
+    --grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+  }
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;font-size:14px;min-height:100vh;overflow-x:hidden;}
+  body::before{content:'';position:fixed;inset:0;background:var(--grain);pointer-events:none;z-index:0;opacity:.4;}
+
+  .loading-overlay{position:fixed;inset:0;background:var(--bg);z-index:998;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+  .loading-overlay.hidden{display:none;}
+  .loading-logo{font-family:'Bebas Neue',sans-serif;font-size:36px;letter-spacing:6px;color:var(--accent);background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .spinner{width:28px;height:28px;border:2px solid var(--border2);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  header{height:var(--header-h);background:linear-gradient(90deg,#080e16,#0d1520);border-bottom:1px solid var(--border);padding:0 18px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:90;}
+  .logo{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .logo span{color:var(--text2);-webkit-text-fill-color:var(--text2);}
+  .sync-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);}
+
+  nav{height:var(--nav-h);background:var(--surface);border-bottom:1px solid var(--border);display:flex;position:sticky;top:var(--header-h);z-index:89;}
+  .tab{flex:1;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:2px;color:var(--muted);border-bottom:3px solid transparent;transition:color .2s,border-color .2s;}
+  .tab:hover{color:var(--text2);}
+  .tab.active[data-section="east"]{border-color:var(--east-c);color:var(--east-c);}
+  .tab.active[data-section="west"]{border-color:var(--west-c);color:var(--west-c);}
+  .tab.active[data-section="playoffs"]{border-color:var(--accent);color:var(--accent);}
+  .tab-icon{font-size:14px;}
+
+  main{padding:16px;max-width:980px;margin:0 auto;position:relative;z-index:1;}
+  @media(min-width:600px){main{padding:22px 24px;}}
+
+  .section{display:none;}
+  .section.active{display:block;animation:fadeIn .18s ease;}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+  /* LEAGUE HEADER */
+  .conf-header{display:flex;align-items:center;gap:14px;margin-bottom:14px;}
+  .conf-badge{width:42px;height:42px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+  .conf-title{font-family:'Bebas Neue',sans-serif;font-size:26px;letter-spacing:2px;}
+  .conf-season{font-size:11px;color:var(--text2);margin-top:2px;letter-spacing:.5px;}
+  .record-badge{margin-left:auto;padding:4px 12px;border-radius:20px;font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:1.5px;white-space:nowrap;}
+
+  /* TABLE */
+  .table-wrapper{overflow-x:auto;-webkit-overflow-scrolling:touch;border-radius:10px;border:1px solid var(--border);}
+  .standings-table{width:100%;border-collapse:collapse;}
+  .standings-table thead tr{background:var(--surface2);border-bottom:1px solid var(--border);}
+  .standings-table thead th{padding:8px 10px;text-align:center;font-family:'DM Sans',sans-serif;font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);white-space:nowrap;}
+  .standings-table thead th:nth-child(1),.standings-table thead th:nth-child(2){text-align:left;}
+  .standings-table tbody tr{transition:background .12s;background:var(--surface);cursor:pointer;}
+  .standings-table tbody tr:nth-child(even){background:var(--surface2);}
+  .standings-table tbody tr:hover{background:rgba(255,255,255,.05);}
+  .standings-table tbody tr:last-child td{border-bottom:none;}
+  .standings-table tbody td{padding:7px 10px;text-align:center;border-bottom:1px solid rgba(255,255,255,.025);font-size:13px;white-space:nowrap;}
+  .standings-table tbody td:nth-child(2){text-align:left;}
+
+  /* Portrait: PJ, V, D, PCT only */
+  @media(orientation:portrait){
+    .col-home,.col-away,.col-div,.col-conf,.col-ppa,.col-ppp,.col-diff,.col-streak,.col-l10{display:none;}
+    .table-wrapper{overflow-x:visible;}
+  }
+  @media(orientation:landscape),(min-width:600px){
+    .col-home,.col-away,.col-div,.col-conf,.col-ppa,.col-ppp,.col-diff,.col-streak,.col-l10{display:table-cell;}
+  }
+
+  .pos-num{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--text2);width:22px;text-align:center;display:inline-block;}
+  .team-cell{display:flex;align-items:center;gap:8px;font-weight:500;font-size:13px;}
+  .team-abbr{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1px;min-width:34px;}
+  .team-name-full{color:var(--text2);font-size:12px;display:none;}
+  @media(min-width:400px){.team-name-full{display:inline;}}
+  .pct{font-family:'Bebas Neue',sans-serif;font-size:16px;font-weight:400;color:var(--text);}
+  .wins{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--green);}
+  .losses{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--red);}
+
+  /* Zone bars */
+  .zone-playoff  td:first-child{box-shadow:inset 3px 0 0 var(--accent);}
+  .zone-playin   td:first-child{box-shadow:inset 3px 0 0 #60a5fa;}
+  .zone-out      td:first-child{box-shadow:inset 3px 0 0 var(--muted);}
+
+  .divider-row td{padding:0;height:2px;background:linear-gradient(90deg,transparent,var(--border2),transparent);}
+  .divider-row:hover{background:transparent!important;}
+
+  .zone-legend{display:flex;flex-wrap:wrap;gap:8px 18px;margin-top:10px;padding:9px 12px;background:var(--surface2);border-radius:8px;border:1px solid var(--border);}
+  .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--text2);}
+  .ld{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .edit-hint{font-size:11px;color:var(--muted);margin-top:7px;text-align:right;}
+
+  /* PLAYOFFS BRACKET */
+  .playoffs-header{margin-bottom:18px;}
+  .playoffs-title{font-family:'Bebas Neue',sans-serif;font-size:32px;letter-spacing:4px;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .playoffs-sub{font-size:12px;color:var(--text2);margin-top:2px;letter-spacing:.5px;}
+  .bracket-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:12px;}
+  .bracket-outer{display:flex;flex-direction:column;gap:28px;min-width:max-content;}
+
+  .conf-bracket-section{display:flex;flex-direction:column;gap:10px;}
+  .conf-bracket-label{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:3px;padding:4px 10px;border-radius:4px;display:inline-block;margin-bottom:4px;}
+  .conf-bracket-label.east{background:rgba(59,125,216,.15);color:var(--east-c);border:1px solid rgba(59,125,216,.3);}
+  .conf-bracket-label.west{background:rgba(212,63,63,.15);color:var(--west-c);border:1px solid rgba(212,63,63,.3);}
+
+  /* PLAY-IN */
+  .playin-section{margin-bottom:16px;}
+  .playin-title{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2.5px;color:#60a5fa;margin-bottom:8px;padding:4px 0;border-bottom:1px solid rgba(96,165,250,.2);}
+  .playin-grid{display:flex;gap:12px;flex-wrap:wrap;}
+  .playin-game{background:var(--surface2);border:1px solid rgba(96,165,250,.25);border-radius:8px;overflow:hidden;width:174px;flex-shrink:0;}
+  .playin-game-header{background:rgba(96,165,250,.12);padding:3px 8px;font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:1.5px;color:#60a5fa;display:flex;justify-content:space-between;align-items:center;}
+  .playin-game-badge{background:#60a5fa;color:#000;border-radius:3px;padding:1px 5px;font-size:9px;letter-spacing:1px;}
+  .playin-result{font-size:9px;color:var(--accent);font-family:'Bebas Neue',sans-serif;letter-spacing:.5px;}
+  .playin-arrow{display:flex;align-items:center;padding:3px 8px 4px;gap:5px;font-size:10px;color:var(--muted);}
+  .playin-arrow-icon{font-size:12px;}
+
+  .bracket-grid{display:flex;gap:20px;align-items:flex-start;}
+  .bracket-col{display:flex;flex-direction:column;width:180px;}
+  .bc-title{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2.5px;text-transform:uppercase;color:var(--accent);text-align:center;padding:5px 0 10px;border-bottom:1px solid rgba(200,168,75,.2);margin-bottom:12px;}
+
+  .b-match{background:var(--surface2);border:1px solid var(--border);border-radius:8px;overflow:hidden;margin-bottom:5px;transition:border-color .18s;}
+  .b-match:hover{border-color:var(--accent);}
+  .b-match.is-finals{border:2px solid var(--accent);background:linear-gradient(135deg,#10180a,#1a2a0e);}
+  .finals-header{background:linear-gradient(90deg,var(--accent),var(--accent2));color:#000;font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;text-align:center;padding:4px;}
+  .b-team{display:flex;align-items:center;justify-content:space-between;padding:7px 10px;border-bottom:1px solid var(--border);font-size:12px;font-weight:500;transition:background .12s;}
+  .b-team:last-child{border-bottom:none;}
+  .b-team.winner{background:rgba(200,168,75,.1);font-weight:700;}
+  .b-team.loser{opacity:.4;}
+  .b-team.pi-winner{background:rgba(96,165,250,.1);font-weight:700;}
+  .b-team.pi-loser{opacity:.4;}
+  .b-team.eliminated{opacity:.25;text-decoration:line-through;}
+  .b-seed{font-family:'Bebas Neue',sans-serif;font-size:10px;color:var(--muted);min-width:12px;margin-right:5px;}
+  .b-name{flex:1;font-size:12px;}
+  .b-wins{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--accent);min-width:16px;text-align:right;}
+  .b-score{font-family:'Bebas Neue',sans-serif;font-size:14px;min-width:16px;text-align:right;}
+  .b-score.high{color:var(--green);}
+  .b-score.low{color:var(--red);}
+  .b-wins.tbd{color:var(--muted);font-size:10px;}
+  .b-series{padding:3px 10px 5px;font-size:10px;color:var(--muted);display:flex;gap:6px;}
+  .b-series-val{color:var(--text2);}
+
+  /* EDIT MODAL */
+  .modal-overlay{display:none;position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.8);align-items:center;justify-content:center;padding:20px;}
+  .modal-overlay.open{display:flex;}
+  .modal-box{background:var(--surface);border:1px solid var(--border2);border-radius:14px;width:min(360px,100%);box-shadow:0 24px 60px rgba(0,0,0,.8);overflow:hidden;}
+  .modal-header{padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+  .modal-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:1px;color:var(--accent);}
+  .modal-close{cursor:pointer;color:var(--muted);font-size:18px;padding:2px 4px;}
+  .modal-close:hover{color:var(--text);}
+  .modal-body{padding:16px;}
+  .modal-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px;}
+
+  /* ADMIN */
+  .admin-btn{position:fixed;bottom:20px;right:20px;width:44px;height:44px;border-radius:50%;background:var(--surface2);border:1px solid var(--border2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:18px;color:var(--text2);z-index:200;box-shadow:0 4px 20px rgba(0,0,0,.6);transition:all .2s;}
+  .admin-btn:hover{color:var(--accent);border-color:var(--accent);}
+  .admin-panel{position:fixed;bottom:74px;right:20px;width:min(370px,calc(100vw - 32px));background:var(--surface);border:1px solid var(--border2);border-radius:14px;box-shadow:0 24px 60px rgba(0,0,0,.8);z-index:199;display:none;flex-direction:column;max-height:calc(100vh - 120px);overflow:hidden;}
+  .admin-panel.open{display:flex;}
+  .ap-header{padding:12px 16px;background:var(--surface2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+  .ap-title{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1.5px;color:var(--accent);}
+  .ap-close{cursor:pointer;color:var(--muted);font-size:18px;line-height:1;padding:2px;}
+  .ap-close:hover{color:var(--text);}
+  .ap-tabs{display:flex;gap:2px;padding:8px 10px 0;background:var(--surface2);border-bottom:1px solid var(--border);flex-shrink:0;}
+  .ap-tab{flex:1;padding:5px 4px;background:transparent;border:1px solid transparent;border-radius:6px 6px 0 0;font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--muted);cursor:pointer;text-align:center;transition:all .15s;}
+  .ap-tab.active{color:var(--accent);border-color:var(--border);background:var(--surface);}
+  .ap-body{padding:13px;overflow-y:auto;}
+  .ap-section{display:none;}
+  .ap-section.active{display:block;}
+  .af{margin-bottom:10px;}
+  .af label{display:block;font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;}
+  .af select,.af input{width:100%;background:var(--surface2);border:1px solid var(--border2);border-radius:6px;color:var(--text);padding:7px 10px;font-family:'DM Sans',sans-serif;font-size:13px;outline:none;}
+  .af select:focus,.af input:focus{border-color:var(--accent);}
+  .score-row{display:flex;gap:8px;align-items:center;}
+  .score-sep{font-family:'Bebas Neue',sans-serif;font-size:20px;color:var(--muted);}
+  .btn-reg{width:100%;background:var(--accent);color:#000;border:none;border-radius:8px;padding:9px;font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1.5px;cursor:pointer;margin-top:3px;transition:opacity .2s;}
+  .btn-reg:hover{opacity:.85;}
+  .ap-feedback{font-size:12px;margin-top:7px;text-align:center;color:var(--green);min-height:16px;}
+  .ap-feedback.err{color:var(--red);}
+
+  ::-webkit-scrollbar{width:4px;height:4px;}
+  ::-webkit-scrollbar-track{background:transparent;}
+  ::-webkit-scrollbar-thumb{background:var(--border2);border-radius:2px;}
+  *{-webkit-tap-highlight-color:transparent;}
+</style>
+</head>
+<body>
+
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-logo">🏀 NBA TRACKER</div>
+  <div class="spinner"></div>
+</div>
+
+<header>
+  <div class="logo">🏀 <span>NBA</span>TRACKER</div>
+  <div style="display:flex;align-items:center;gap:7px;font-size:11px;color:var(--text2);">
+    <div class="sync-dot"></div>
+    <span>2024/25</span>
+  </div>
+</header>
+
+<nav>
+  <div class="tab active" data-section="east"><span class="tab-icon">🔵</span> ESTE</div>
+  <div class="tab" data-section="west"><span class="tab-icon">🔴</span> OESTE</div>
+  <div class="tab" data-section="playoffs"><span class="tab-icon">🏆</span> PLAYOFFS</div>
+</nav>
+
+<main>
+
+  <div class="section active" id="east">
+    <div class="conf-header">
+      <div class="conf-badge" style="background:rgba(59,125,216,.15);border:1px solid rgba(59,125,216,.3)">🔵</div>
+      <div>
+        <div class="conf-title" style="color:var(--east-c)">Conferencia Este</div>
+        <div class="conf-season">NBA 2024/25 · Eastern Conference</div>
+      </div>
+      <div class="record-badge" style="background:rgba(59,125,216,.12);color:var(--east-c);border:1px solid rgba(59,125,216,.3)" id="gp-east">J65</div>
+    </div>
+    <div class="table-wrapper"><table class="standings-table" id="table-east">
+      <thead><tr>
+        <th style="width:28px">#</th><th>Equipo</th>
+        <th>PJ</th><th>V</th><th>D</th><th>PCT</th>
+        <th class="col-home">LOCAL</th><th class="col-away">VIS</th>
+        <th class="col-div">DIV</th><th class="col-conf">CONF</th>
+        <th class="col-ppa">PPA</th><th class="col-ppp">PPP</th>
+        <th class="col-diff">DIF</th><th class="col-streak">RAC</th><th class="col-l10">U10</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <div class="edit-hint">✏️ Toca un equipo para editar</div>
+    <div class="zone-legend" id="legend-east"></div>
+  </div>
+
+  <div class="section" id="west">
+    <div class="conf-header">
+      <div class="conf-badge" style="background:rgba(212,63,63,.15);border:1px solid rgba(212,63,63,.3)">🔴</div>
+      <div>
+        <div class="conf-title" style="color:var(--west-c)">Conferencia Oeste</div>
+        <div class="conf-season">NBA 2024/25 · Western Conference</div>
+      </div>
+      <div class="record-badge" style="background:rgba(212,63,63,.12);color:var(--west-c);border:1px solid rgba(212,63,63,.3)" id="gp-west">J67</div>
+    </div>
+    <div class="table-wrapper"><table class="standings-table" id="table-west">
+      <thead><tr>
+        <th style="width:28px">#</th><th>Equipo</th>
+        <th>PJ</th><th>V</th><th>D</th><th>PCT</th>
+        <th class="col-home">LOCAL</th><th class="col-away">VIS</th>
+        <th class="col-div">DIV</th><th class="col-conf">CONF</th>
+        <th class="col-ppa">PPA</th><th class="col-ppp">PPP</th>
+        <th class="col-diff">DIF</th><th class="col-streak">RAC</th><th class="col-l10">U10</th>
+      </tr></thead>
+      <tbody></tbody>
+    </table></div>
+    <div class="edit-hint">✏️ Toca un equipo para editar</div>
+    <div class="zone-legend" id="legend-west"></div>
+  </div>
+
+  <div class="section" id="playoffs">
+    <div class="playoffs-header">
+      <div class="playoffs-title">🏆 NBA Playoffs</div>
+      <div class="playoffs-sub">2024/25 · Al mejor de 7</div>
+    </div>
+    <div class="bracket-scroll"><div id="playoffs-bracket"></div></div>
+  </div>
+
+</main>
+
+<!-- EDIT MODAL -->
+<div class="modal-overlay" id="editModal">
+  <div class="modal-box">
+    <div class="modal-header">
+      <span class="modal-title" id="modal-team-title">Editar equipo</span>
+      <span class="modal-close" id="modalClose">✕</span>
+    </div>
+    <div class="modal-body">
+      <div class="modal-grid">
+        <div class="af"><label>PJ</label><input id="ef-pj" type="number" min="0"></div>
+        <div class="af"><label>Victorias</label><input id="ef-w" type="number" min="0"></div>
+        <div class="af"><label>Derrotas</label><input id="ef-l" type="number" min="0"></div>
+        <div class="af"><label>PPA</label><input id="ef-ppa" type="number" step="0.1"></div>
+        <div class="af"><label>PPP</label><input id="ef-ppp" type="number" step="0.1"></div>
+        <div class="af"><label>Racha</label><input id="ef-streak" type="text" placeholder="G5 / P3"></div>
+      </div>
+      <div class="af"><label>Últimos 10</label><input id="ef-l10" type="text" placeholder="7-3"></div>
+      <button class="btn-reg" id="modal-save">GUARDAR</button>
+      <div class="ap-feedback" id="fb-modal"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN BTN -->
+<button class="admin-btn" id="adminBtn" title="Admin">⚙</button>
+
+<!-- ADMIN PANEL -->
+<div class="admin-panel" id="adminPanel">
+  <div class="ap-header">
+    <span class="ap-title">⚙ PANEL ADMIN</span>
+    <span class="ap-close" id="adminClose">✕</span>
+  </div>
+  <div class="ap-tabs">
+    <div class="ap-tab active" data-atab="game">Partido</div>
+    <div class="ap-tab" data-atab="playoffs">Playoffs</div>
+    <div class="ap-tab" data-atab="settings">Config</div>
+  </div>
+  <div class="ap-body">
+
+    <div class="ap-section active" id="atab-game">
+      <div class="af"><label>Local</label>
+        <select id="ag-home"></select>
+      </div>
+      <div class="af"><label>Visitante</label>
+        <select id="ag-away"></select>
+      </div>
+      <div class="af"><label>Resultado (PTS)</label>
+        <div class="score-row">
+          <input id="ag-hpts" type="number" min="0" max="200" value="110" style="text-align:center">
+          <span class="score-sep">—</span>
+          <input id="ag-apts" type="number" min="0" max="200" value="105" style="text-align:center">
+        </div>
+      </div>
+      <button class="btn-reg" id="btn-game-reg">REGISTRAR</button>
+      <div class="ap-feedback" id="fb-game"></div>
+    </div>
+
+    <div class="ap-section" id="atab-playoffs">
+      <div class="af"><label>Sección</label>
+        <select id="ap-section">
+          <option value="playin">Play-In Tournament</option>
+          <option value="playoffs">Playoffs</option>
+          <option value="finals">Finales NBA</option>
+        </select>
+      </div>
+
+      <!-- Play-in fields -->
+      <div id="ap-playin-fields">
+        <div class="af"><label>Conferencia</label>
+          <select id="ap-pi-conf">
+            <option value="east">Este</option>
+            <option value="west">Oeste</option>
+          </select>
+        </div>
+        <div class="af"><label>Juego</label>
+          <select id="ap-pi-game">
+            <option value="g1">Juego 1: #7 vs #8 (→ Seed 7)</option>
+            <option value="g2">Juego 2: #9 vs #10 (→ G3 o fuera)</option>
+            <option value="g3">Juego 3: Decisivo (→ Seed 8)</option>
+          </select>
+        </div>
+        <div class="af"><label>Marcador (PTS Local – PTS Visitante)</label>
+          <div class="score-row">
+            <input id="ap-pi-h" type="number" min="0" max="200" value="110" style="text-align:center">
+            <span class="score-sep">—</span>
+            <input id="ap-pi-a" type="number" min="0" max="200" value="105" style="text-align:center">
+          </div>
+        </div>
+        <button class="btn-reg" id="btn-pi-reg">REGISTRAR PLAY-IN</button>
+        <div class="ap-feedback" id="fb-pi"></div>
+      </div>
+
+      <!-- Playoffs series fields -->
+      <div id="ap-playoffs-fields" style="display:none">
+        <div class="af"><label>Conferencia</label>
+          <select id="ap-conf">
+            <option value="east">Este</option>
+            <option value="west">Oeste</option>
+          </select>
+        </div>
+        <div class="af"><label>Ronda</label>
+          <select id="ap-round">
+            <option value="r1">Primera Ronda</option>
+            <option value="semi">Semifinales de Conf.</option>
+            <option value="conf">Final de Conf.</option>
+          </select>
+        </div>
+        <div class="af"><label>Serie</label><select id="ap-match"></select></div>
+        <div class="af"><label>Victorias Local</label>
+          <input id="ap-hw" type="number" min="0" max="4" value="0">
+        </div>
+        <div class="af"><label>Victorias Visitante</label>
+          <input id="ap-aw" type="number" min="0" max="4" value="0">
+        </div>
+        <button class="btn-reg" id="btn-playoffs-reg">REGISTRAR SERIE</button>
+        <div class="ap-feedback" id="fb-playoffs"></div>
+      </div>
+
+      <!-- Finals fields -->
+      <div id="ap-finals-fields" style="display:none">
+        <div class="af"><label>Victorias Este</label>
+          <input id="ap-fw-e" type="number" min="0" max="4" value="0">
+        </div>
+        <div class="af"><label>Victorias Oeste</label>
+          <input id="ap-fw-o" type="number" min="0" max="4" value="0">
+        </div>
+        <button class="btn-reg" id="btn-finals-reg">REGISTRAR FINALES</button>
+        <div class="ap-feedback" id="fb-finals"></div>
+      </div>
+    </div>
+
+    <div class="ap-section" id="atab-settings">
+      <div style="margin-bottom:13px">
+        <div style="font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:7px">Exportar / Importar</div>
+        <div style="display:flex;gap:7px">
+          <button class="btn-reg" style="flex:1;background:var(--surface3);color:var(--accent);border:1px solid var(--accent);font-size:12px;padding:8px 4px" id="btn-export">↓ EXPORTAR</button>
+          <label style="flex:1">
+            <div class="btn-reg" style="background:var(--surface3);color:var(--text2);border:1px solid var(--border2);font-size:12px;padding:8px 4px;cursor:pointer;text-align:center">↑ IMPORTAR</div>
+            <input type="file" id="btn-import" accept=".json" style="display:none">
+          </label>
+        </div>
+      </div>
+      <div style="width:100%;height:1px;background:var(--border);margin-bottom:12px"></div>
+      <button class="btn-reg" style="background:var(--surface3);color:var(--red);border:1px solid var(--red);font-size:13px" id="btn-reset">🗑 RESETEAR DATOS</button>
+      <div class="ap-feedback" id="fb-settings"></div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+//  DEFAULT DATA
+// ══════════════════════════════════════════════════════════
+const TEAMS_META = {
+  // East
+  DET:{name:'Detroit Pistons',    abbr:'DET', conf:'east'},
+  BOS:{name:'Boston Celtics',     abbr:'BOS', conf:'east'},
+  NY: {name:'New York Knicks',    abbr:'NY',  conf:'east'},
+  CLE:{name:'Cleveland Cavaliers',abbr:'CLE', conf:'east'},
+  ORL:{name:'Orlando Magic',      abbr:'ORL', conf:'east'},
+  MIA:{name:'Miami Heat',         abbr:'MIA', conf:'east'},
+  TOR:{name:'Toronto Raptors',    abbr:'TOR', conf:'east'},
+  ATL:{name:'Atlanta Hawks',      abbr:'ATL', conf:'east'},
+  PHI:{name:'Philadelphia 76ers', abbr:'PHI', conf:'east'},
+  CHA:{name:'Charlotte Hornets',  abbr:'CHA', conf:'east'},
+  MIL:{name:'Milwaukee Bucks',    abbr:'MIL', conf:'east'},
+  CHI:{name:'Chicago Bulls',      abbr:'CHI', conf:'east'},
+  BKN:{name:'Brooklyn Nets',      abbr:'BKN', conf:'east'},
+  WSH:{name:'Washington Wizards', abbr:'WSH', conf:'east'},
+  IND:{name:'Indiana Pacers',     abbr:'IND', conf:'east'},
+  // West
+  OKC:{name:'Oklahoma City Thunder',abbr:'OKC',conf:'west'},
+  SA: {name:'San Antonio Spurs',  abbr:'SA',  conf:'west'},
+  LAL:{name:'Los Angeles Lakers', abbr:'LAL', conf:'west'},
+  HOU:{name:'Houston Rockets',    abbr:'HOU', conf:'west'},
+  DEN:{name:'Denver Nuggets',     abbr:'DEN', conf:'west'},
+  MIN:{name:'Minnesota Timberwolves',abbr:'MIN',conf:'west'},
+  PHX:{name:'Phoenix Suns',       abbr:'PHX', conf:'west'},
+  LAC:{name:'LA Clippers',        abbr:'LAC', conf:'west'},
+  GS: {name:'Golden State Warriors',abbr:'GS',conf:'west'},
+  POR:{name:'Portland Trail Blazers',abbr:'POR',conf:'west'},
+  MEM:{name:'Memphis Grizzlies',  abbr:'MEM', conf:'west'},
+  DAL:{name:'Dallas Mavericks',   abbr:'DAL', conf:'west'},
+  NO: {name:'New Orleans Pelicans',abbr:'NO', conf:'west'},
+  UTAH:{name:'Utah Jazz',         abbr:'UTAH',conf:'west'},
+  SAC:{name:'Sacramento Kings',   abbr:'SAC', conf:'west'},
+};
+
+const DEFAULT_EAST = [
+  {id:'DET',pj:65,w:47,l:18,home:'24-8', away:'22-10',div:'10-4', conf:'32-10',ppa:117.2,ppp:109.6,streak:'G2',l10:'5-5'},
+  {id:'BOS',pj:66,w:43,l:23,home:'21-10',away:'22-13',div:'9-5',  conf:'28-14',ppa:114.3,ppp:107.1,streak:'P2',l10:'6-4'},
+  {id:'NY', pj:67,w:42,l:25,home:'23-9', away:'18-16',div:'11-3', conf:'27-15',ppa:117.2,ppp:110.9,streak:'G1',l10:'6-4'},
+  {id:'CLE',pj:66,w:40,l:26,home:'22-12',away:'18-14',div:'8-5',  conf:'26-17',ppa:118.8,ppp:114.8,streak:'P1',l10:'5-5'},
+  {id:'ORL',pj:65,w:37,l:28,home:'21-11',away:'15-15',div:'8-5',  conf:'23-19',ppa:115.6,ppp:114.0,streak:'G6',l10:'8-2'},
+  {id:'MIA',pj:67,w:38,l:29,home:'23-11',away:'15-18',div:'7-5',  conf:'22-18',ppa:120.5,ppp:116.5,streak:'G7',l10:'8-2'},
+  {id:'TOR',pj:65,w:36,l:29,home:'17-16',away:'19-13',div:'4-10', conf:'27-16',ppa:113.4,ppp:111.9,streak:'P2',l10:'4-6'},
+  {id:'ATL',pj:66,w:35,l:31,home:'17-16',away:'18-15',div:'7-6',  conf:'20-21',ppa:117.7,ppp:116.9,streak:'G8',l10:'9-1'},
+  {id:'PHI',pj:66,w:35,l:31,home:'18-16',away:'17-15',div:'8-7',  conf:'21-23',ppa:115.8,ppp:116.5,streak:'P1',l10:'5-5'},
+  {id:'CHA',pj:67,w:34,l:33,home:'14-17',away:'20-16',div:'9-5',  conf:'20-22',ppa:115.7,ppp:112.3,streak:'G2',l10:'8-2'},
+  {id:'MIL',pj:65,w:27,l:38,home:'15-18',away:'12-20',div:'8-5',  conf:'19-25',ppa:111.0,ppp:115.9,streak:'P3',l10:'3-7'},
+  {id:'CHI',pj:66,w:27,l:39,home:'16-18',away:'11-21',div:'4-10', conf:'17-26',ppa:115.9,ppp:120.2,streak:'P1',l10:'3-7'},
+  {id:'BKN',pj:66,w:17,l:49,home:'9-23', away:'8-26', div:'3-10', conf:'12-30',ppa:106.9,ppp:115.8,streak:'P2',l10:'2-8'},
+  {id:'WSH',pj:65,w:16,l:49,home:'11-22',away:'5-27', div:'2-12', conf:'11-30',ppa:112.8,ppp:123.9,streak:'P10',l10:'0-10'},
+  {id:'IND',pj:66,w:15,l:51,home:'10-23',away:'5-28', div:'3-9',  conf:'11-30',ppa:111.3,ppp:120.0,streak:'P11',l10:'0-10'},
+];
+
+const DEFAULT_WEST = [
+  {id:'OKC', pj:67,w:52,l:15,home:'28-6', away:'24-8', div:'10-3',conf:'36-9', ppa:118.6,ppp:107.8,streak:'G7',l10:'9-1'},
+  {id:'SA',  pj:66,w:48,l:18,home:'25-7', away:'22-11',div:'11-3',conf:'28-14',ppa:118.9,ppp:111.9,streak:'P1',l10:'8-2'},
+  {id:'LAL', pj:66,w:41,l:25,home:'22-12',away:'19-13',div:'8-7', conf:'27-16',ppa:116.3,ppp:115.1,streak:'G4',l10:'7-3'},
+  {id:'HOU', pj:65,w:40,l:25,home:'22-8', away:'18-17',div:'6-6', conf:'22-19',ppa:114.2,ppp:110.0,streak:'P1',l10:'6-4'},
+  {id:'DEN', pj:67,w:41,l:26,home:'18-13',away:'23-13',div:'6-5', conf:'25-14',ppa:120.6,ppp:116.5,streak:'G2',l10:'5-5'},
+  {id:'MIN', pj:66,w:40,l:26,home:'22-12',away:'18-14',div:'8-5', conf:'24-19',ppa:118.6,ppp:115.1,streak:'P3',l10:'6-4'},
+  {id:'PHX', pj:66,w:39,l:27,home:'22-13',away:'17-14',div:'10-6',conf:'25-18',ppa:112.5,ppp:111.0,streak:'G4',l10:'7-3'},
+  {id:'LAC', pj:65,w:33,l:32,home:'18-13',away:'15-19',div:'8-5', conf:'21-19',ppa:113.4,ppp:112.6,streak:'G3',l10:'6-4'},
+  {id:'GS',  pj:65,w:32,l:33,home:'19-14',away:'13-19',div:'6-6', conf:'22-21',ppa:115.2,ppp:114.2,streak:'P3',l10:'3-7'},
+  {id:'POR', pj:66,w:31,l:35,home:'17-16',away:'14-19',div:'5-7', conf:'23-19',ppa:115.1,ppp:117.8,streak:'P1',l10:'4-6'},
+  {id:'MEM', pj:65,w:23,l:42,home:'11-20',away:'11-21',div:'6-7', conf:'18-27',ppa:115.8,ppp:118.3,streak:'P6',l10:'2-8'},
+  {id:'DAL', pj:66,w:22,l:44,home:'14-19',away:'8-24', div:'4-10',conf:'12-29',ppa:113.1,ppp:117.7,streak:'G1',l10:'2-8'},
+  {id:'NO',  pj:67,w:22,l:45,home:'13-21',away:'9-24', div:'6-7', conf:'13-29',ppa:115.6,ppp:120.0,streak:'G2',l10:'7-3'},
+  {id:'UTAH',pj:66,w:20,l:46,home:'12-22',away:'8-24', div:'1-10',conf:'11-30',ppa:117.4,ppp:125.0,streak:'P1',l10:'2-8'},
+  {id:'SAC', pj:67,w:16,l:51,home:'11-23',away:'5-28', div:'2-10',conf:'10-34',ppa:110.6,ppp:120.9,streak:'P1',l10:'4-6'},
+];
+
+// ══════════════════════════════════════════════════════════
+//  PLAY-IN + PLAYOFFS DATA
+// ══════════════════════════════════════════════════════════
+// Play-in: 3 juegos por conferencia
+//   g1: #7 vs #8  → ganador = seed 7 playoffs; perdedor sigue vivo
+//   g2: #9 vs #10 → ganador sigue vivo; perdedor eliminado
+//   g3: perdedor(g1) vs ganador(g2) → ganador = seed 8 playoffs; perdedor eliminado
+//
+const DEFAULT_PLAYIN = {
+  east:{
+    // ATL(7) ganó a BOS(8) → seed 7. MIA(10) ganó a CHA(9) → G3. MIA ganó a BOS → seed 8.
+    g1:{home:'ATL',homeS:7, away:'BOS_pi',awayS:8, score:[117,101]},
+    g2:{home:'CHA',homeS:9, away:'MIA',   awayS:10,score:[112,114]},
+    g3:{home:'BOS_pi',homeS:'L7/8',away:'MIA',awayS:'G9/10',score:[114,118]},
+  },
+  west:{
+    // GS(7) ganó a LAC(8) → seed 7. MEM(9) ganó a DAL(10) → G3. MEM ganó a LAC → seed 8.
+    g1:{home:'GS', homeS:7, away:'LAC',   awayS:8, score:[115,105]},
+    g2:{home:'MEM',homeS:9, away:'DAL',   awayS:10,score:[120,109]},
+    g3:{home:'LAC',homeS:'L7/8',away:'MEM',awayS:'G9/10',score:[105,112]},
+  },
+};
+
+// Cruces reales 2025: #1 vs #8, #2 vs #7, #3 vs #6, #4 vs #5
+const DEFAULT_PLAYOFFS = {
+  east:{
+    r1:[
+      // MITAD SUPERIOR: 1v8 y 4v5
+      {home:'DET',homeS:1, away:'ATL', awayS:8, wins:[0,0]}, // 1 DET vs 8 ATL (play-in)
+      {home:'CLE',homeS:4, away:'ORL', awayS:5, wins:[0,0]}, // 4 CLE vs 5 ORL
+      // MITAD INFERIOR: 2v7 y 3v6
+      {home:'BOS',homeS:2, away:'TOR', awayS:7, wins:[0,0]}, // 2 BOS vs 7 TOR (play-in)
+      {home:'NY', homeS:3, away:'MIA', awayS:6, wins:[0,0]}, // 3 NY  vs 6 MIA
+    ],
+    semi:[
+      {home:'TBD',homeS:1,away:'TBD',awayS:4,wins:[0,0]},
+      {home:'TBD',homeS:2,away:'TBD',awayS:3,wins:[0,0]},
+    ],
+    conf:[
+      {home:'TBD',homeS:'E1',away:'TBD',awayS:'E2',wins:[0,0]},
+    ],
+  },
+  west:{
+    r1:[
+      // MITAD SUPERIOR: 1v8 y 4v5
+      {home:'OKC',homeS:1, away:'LAC', awayS:8, wins:[0,0]}, // 1 OKC vs 8 LAC (play-in)
+      {home:'HOU',homeS:4, away:'DEN', awayS:5, wins:[0,0]}, // 4 HOU vs 5 DEN
+      // MITAD INFERIOR: 2v7 y 3v6
+      {home:'SA', homeS:2, away:'GS',  awayS:7, wins:[0,0]}, // 2 SA  vs 7 GS  (play-in)
+      {home:'LAL',homeS:3, away:'MIN', awayS:6, wins:[0,0]}, // 3 LAL vs 6 MIN
+    ],
+    semi:[
+      {home:'TBD',homeS:1,away:'TBD',awayS:4,wins:[0,0]},
+      {home:'TBD',homeS:2,away:'TBD',awayS:3,wins:[0,0]},
+    ],
+    conf:[
+      {home:'TBD',homeS:'O1',away:'TBD',awayS:'O2',wins:[0,0]},
+    ],
+  },
+  finals:[{home:'TBD',homeS:'E',away:'TBD',awayS:'O',wins:[0,0]}],
+};
+
+// ══════════════════════════════════════════════════════════
+//  STATE
+// ══════════════════════════════════════════════════════════
+let state = {
+  east: JSON.parse(JSON.stringify(DEFAULT_EAST)),
+  west: JSON.parse(JSON.stringify(DEFAULT_WEST)),
+  playin: JSON.parse(JSON.stringify(DEFAULT_PLAYIN)),
+  playoffs: JSON.parse(JSON.stringify(DEFAULT_PLAYOFFS)),
+};
+let editCtx = {conf: null, id: null};
+
+function persistState() {
+  localStorage.setItem('nbatracker_local', JSON.stringify(state));
+}
+function showFb(el, msg, isErr=false) {
+  el.textContent = msg;
+  el.className = 'ap-feedback' + (isErr?' err':'');
+  setTimeout(() => { el.textContent=''; el.className='ap-feedback'; }, 3500);
+}
+
+// ══════════════════════════════════════════════════════════
+//  RENDER TABLES
+// ══════════════════════════════════════════════════════════
+const pct = t => t.pj > 0 ? (t.w / t.pj).toFixed(3) : '.000';
+
+function zoneClass(pos) {
+  if(pos <= 6) return 'zone-playoff';
+  if(pos <= 10) return 'zone-playin';
+  return 'zone-out';
+}
+
+function renderConf(conf) {
+  const data = [...state[conf]].sort((a,b) => {
+    const pa = parseFloat(pct(a)), pb = parseFloat(pct(b));
+    if(pb !== pa) return pb - pa;
+    return (b.w - b.l) - (a.w - a.l);
+  });
+  // Update games played badge with max PJ in conference
+  const maxPJ = Math.max(...state[conf].map(t => t.pj));
+  const badge = document.getElementById(`gp-${conf}`);
+  if(badge) badge.textContent = `J${maxPJ}`;
+  const tbody = document.querySelector(`#table-${conf} tbody`);
+  let html = '';
+  data.forEach((t, i) => {
+    const pos = i+1;
+    const m = TEAMS_META[t.id] || {name:t.id, abbr:t.id};
+    const diffVal = (t.ppa - t.ppp).toFixed(1);
+    const diffColor = parseFloat(diffVal) > 0 ? 'color:var(--green)' : parseFloat(diffVal) < 0 ? 'color:var(--red)' : 'color:var(--muted)';
+    const diffStr = parseFloat(diffVal) > 0 ? `+${diffVal}` : diffVal;
+    // divider after 6 (playoff), after 10 (play-in)
+    if(pos === 7 || pos === 11) {
+      html += `<tr class="divider-row"><td colspan="15"></td></tr>`;
+    }
+    html += `<tr class="${zoneClass(pos)}" data-conf="${conf}" data-id="${t.id}">
+      <td><span class="pos-num">${pos}</span></td>
+      <td><div class="team-cell"><span class="team-abbr">${m.abbr}</span><span class="team-name-full">${m.name.replace(/^[A-Z]+ /,'')}</span></div></td>
+      <td>${t.pj}</td>
+      <td><span class="wins">${t.w}</span></td>
+      <td><span class="losses">${t.l}</span></td>
+      <td><span class="pct">${pct(t)}</span></td>
+      <td class="col-home">${t.home}</td>
+      <td class="col-away">${t.away}</td>
+      <td class="col-div">${t.div}</td>
+      <td class="col-conf">${t.conf}</td>
+      <td class="col-ppa">${t.ppa.toFixed(1)}</td>
+      <td class="col-ppp">${t.ppp.toFixed(1)}</td>
+      <td class="col-diff" style="${diffColor}">${diffStr}</td>
+      <td class="col-streak">${t.streak}</td>
+      <td class="col-l10">${t.l10}</td>
+    </tr>`;
+  });
+  tbody.innerHTML = html;
+  tbody.querySelectorAll('tr:not(.divider-row)').forEach(row =>
+    row.addEventListener('click', () => openEditModal(row.dataset.conf, row.dataset.id))
+  );
+  const lg = document.getElementById(`legend-${conf}`);
+  lg.innerHTML = `
+    <div class="legend-item"><div class="ld" style="background:var(--accent)"></div>Playoffs directos (Top 6)</div>
+    <div class="legend-item"><div class="ld" style="background:#60a5fa"></div>Play-In (7-10)</div>
+    <div class="legend-item"><div class="ld" style="background:var(--muted)"></div>Eliminado</div>`;
+}
+
+// ══════════════════════════════════════════════════════════
+//  EDIT MODAL
+// ══════════════════════════════════════════════════════════
+function openEditModal(conf, id) {
+  const t = state[conf].find(x => x.id === id);
+  if(!t) return;
+  const m = TEAMS_META[id] || {name:id};
+  editCtx = {conf, id};
+  document.getElementById('modal-team-title').textContent = `✏️ ${m.abbr} ${m.name}`;
+  document.getElementById('ef-pj').value = t.pj;
+  document.getElementById('ef-w').value  = t.w;
+  document.getElementById('ef-l').value  = t.l;
+  document.getElementById('ef-ppa').value = t.ppa;
+  document.getElementById('ef-ppp').value = t.ppp;
+  document.getElementById('ef-streak').value = t.streak;
+  document.getElementById('ef-l10').value = t.l10;
+  document.getElementById('fb-modal').textContent = '';
+  document.getElementById('editModal').classList.add('open');
+}
+document.getElementById('modalClose').addEventListener('click', () => document.getElementById('editModal').classList.remove('open'));
+document.getElementById('editModal').addEventListener('click', e => { if(e.target===document.getElementById('editModal')) document.getElementById('editModal').classList.remove('open'); });
+document.getElementById('modal-save').addEventListener('click', () => {
+  const {conf, id} = editCtx;
+  const t = state[conf].find(x => x.id === id);
+  if(!t) return;
+  t.pj  = parseInt(document.getElementById('ef-pj').value)||0;
+  t.w   = parseInt(document.getElementById('ef-w').value)||0;
+  t.l   = parseInt(document.getElementById('ef-l').value)||0;
+  t.ppa = parseFloat(document.getElementById('ef-ppa').value)||0;
+  t.ppp = parseFloat(document.getElementById('ef-ppp').value)||0;
+  t.streak = document.getElementById('ef-streak').value||'';
+  t.l10    = document.getElementById('ef-l10').value||'';
+  renderConf(conf);
+  persistState();
+  showFb(document.getElementById('fb-modal'), '✓ Stats actualizados');
+  setTimeout(() => document.getElementById('editModal').classList.remove('open'), 1200);
+});
+
+// ══════════════════════════════════════════════════════════
+//  RENDER PLAYOFFS + PLAY-IN
+// ══════════════════════════════════════════════════════════
+const ROUND_LABELS = {r1:'Primera Ronda', semi:'Semis de Conf.', conf:'Final de Conf.'};
+
+function abbr(id) {
+  if(!id) return 'TBD';
+  const clean = id.replace(/_pi$/,''); // strip play-in suffix
+  return TEAMS_META[clean] ? TEAMS_META[clean].abbr : id;
+}
+
+// Derive play-in results: who is seed 7, 8, and who's eliminated
+function getPlayinResults(confKey) {
+  const pi = state.playin[confKey];
+  const result = { seed7: null, seed8: null, eliminated: [] };
+
+  const g1 = pi.g1.score;
+  const g2 = pi.g2.score;
+  const g3 = pi.g3.score;
+
+  // Game 1: #7 vs #8
+  let g1winner = null, g1loser = null;
+  if(g1) {
+    g1winner = g1[0] > g1[1] ? pi.g1.home : pi.g1.away;
+    g1loser  = g1[0] > g1[1] ? pi.g1.away : pi.g1.home;
+    result.seed7 = g1winner;
+  }
+
+  // Game 2: #9 vs #10
+  let g2winner = null, g2loser = null;
+  if(g2) {
+    g2winner = g2[0] > g2[1] ? pi.g2.home : pi.g2.away;
+    g2loser  = g2[0] > g2[1] ? pi.g2.away : pi.g2.home;
+    result.eliminated.push(g2loser);
+  }
+
+  // Game 3: loser(g1) vs winner(g2)
+  if(g3) {
+    const g3winner = g3[0] > g3[1] ? pi.g3.home : pi.g3.away;
+    const g3loser  = g3[0] > g3[1] ? pi.g3.away : pi.g3.home;
+    result.seed8 = g3winner;
+    result.eliminated.push(g3loser);
+  }
+
+  return result;
+}
+
+function renderPlayinGame(game, gameLabel, resultTag, resultNote) {
+  const s = game.score;
+  const played = s !== null;
+  const winner = played ? (s[0] > s[1] ? 'home' : 'away') : null;
+  const homeName = abbr(game.home);
+  const awayName = abbr(game.away);
+  const hw1 = winner === 'home' ? 'pi-winner' : winner === 'away' ? 'pi-loser' : '';
+  const hw2 = winner === 'away' ? 'pi-winner' : winner === 'home' ? 'pi-loser' : '';
+
+  return `<div class="playin-game">
+    <div class="playin-game-header">
+      <span>${gameLabel}</span>
+      <span class="playin-game-badge">${resultTag}</span>
+    </div>
+    <div class="b-team ${hw1}">
+      <span class="b-seed">${game.homeS}</span>
+      <span class="b-name">${homeName}</span>
+      <span class="b-score ${played?(s[0]>s[1]?'high':'low'):''}">${played?s[0]:'–'}</span>
+    </div>
+    <div class="b-team ${hw2}">
+      <span class="b-seed">${game.awayS}</span>
+      <span class="b-name">${awayName}</span>
+      <span class="b-score ${played?(s[1]>s[0]?'high':'low'):''}">${played?s[1]:'–'}</span>
+    </div>
+    <div class="playin-arrow"><span class="playin-arrow-icon">→</span><span>${resultNote}</span></div>
+  </div>`;
+}
+
+function renderPlayinSection(confKey) {
+  const pi = state.playin[confKey];
+  // Update g3 teams based on g1/g2 results
+  const g1 = pi.g1.score, g2 = pi.g2.score;
+  if(g1) {
+    pi.g3.home = g1[0] > g1[1] ? pi.g1.away : pi.g1.home;
+    pi.g3.homeS = pi.g3.home !== 'TBD' ? `L(${abbr(g1[0]>g1[1]?pi.g1.home:pi.g1.away)})` : 'L7/8';
+  }
+  if(g2) {
+    pi.g3.away = g2[0] > g2[1] ? pi.g2.home : pi.g2.away;
+    pi.g3.awayS = pi.g3.away !== 'TBD' ? `G(${abbr(g2[0]>g2[1]?pi.g2.home:pi.g2.away)})` : 'G9/10';
+  }
+
+  let html = `<div class="playin-section">`;
+  html += `<div class="playin-title">🎟 PLAY-IN TOURNAMENT</div>`;
+  html += `<div class="playin-grid">`;
+  html += renderPlayinGame(pi.g1, 'Juego 1 · #7 vs #8', '→ SEED 7', 'Ganador → Playoffs #7 · Perdedor juega G3');
+  html += renderPlayinGame(pi.g2, 'Juego 2 · #9 vs #10', '→ G3 o FUERA', 'Ganador → G3 · Perdedor eliminado');
+  html += renderPlayinGame(pi.g3, 'Juego 3 · Decisivo', '→ SEED 8', 'Ganador → Playoffs #8 · Perdedor eliminado');
+  html += `</div></div>`;
+  return html;
+}
+
+function renderPlayoffsBracket() {
+  const p = state.playoffs;
+  let html = '<div class="bracket-outer">';
+
+  ['east','west'].forEach(confKey => {
+    const cd = p[confKey];
+    const label = confKey==='east' ? 'CONFERENCIA ESTE' : 'CONFERENCIA OESTE';
+    // r1 order: index 0=1v8, 1=2v7, 2=3v6, 3=4v5
+    // Visual grouping: top half = 1v8 + 4v5, bottom half = 2v7 + 3v6
+    // so winners of top half meet in semis[0], winners of bottom half in semis[1]
+    const r1 = cd.r1;
+    const sep = `<div style="height:6px"></div>`;
+    const grpLabel = t => `<div style="font-size:9px;color:var(--muted);letter-spacing:1px;padding:1px 4px;margin-bottom:2px">${t}</div>`;
+
+    html += `<div class="conf-bracket-section">`;
+    html += `<div class="conf-bracket-label ${confKey}">${label}</div>`;
+    html += renderPlayinSection(confKey);
+    html += `<div class="bracket-grid">`;
+
+    // Col 1: Primera Ronda — 1v8, 4v5, gap, 2v7, 3v6
+    html += `<div class="bracket-col"><div class="bc-title">Primera Ronda</div>`;
+    html += grpLabel('MITAD SUPERIOR');
+    html += renderSeries(r1[0], false); // 1 vs 8
+    html += renderSeries(r1[1], false); // 4 vs 5
+    html += sep;
+    html += grpLabel('MITAD INFERIOR');
+    html += renderSeries(r1[2], false); // 2 vs 7
+    html += renderSeries(r1[3], false); // 3 vs 6
+    html += `</div>`;
+
+    // Col 2: Semis — semi[0] (ganadores mitad superior), semi[1] (ganadores mitad inferior)
+    html += `<div class="bracket-col"><div class="bc-title">Semis de Conf.</div>`;
+    html += grpLabel('MITAD SUPERIOR');
+    html += renderSeries(cd.semi[0], false);
+    html += sep;
+    html += grpLabel('MITAD INFERIOR');
+    html += renderSeries(cd.semi[1], false);
+    html += `</div>`;
+
+    // Col 3: Final de conf
+    html += `<div class="bracket-col"><div class="bc-title">Final de Conf.</div>`;
+    html += renderSeries(cd.conf[0], false);
+    html += `</div>`;
+
+    html += `</div></div>`;
+  });
+
+  // Finales NBA
+  html += '<div style="margin-top:4px">';
+  html += '<div style="font-family:\'Bebas Neue\',sans-serif;font-size:13px;letter-spacing:3px;color:var(--accent);margin-bottom:10px;text-align:center">🏆 FINALES NBA</div>';
+  html += '<div style="display:flex;justify-content:center"><div style="width:200px">';
+  p.finals.forEach(m => { html += renderSeries(m, true); });
+  html += '</div></div></div>';
+
+  html += '</div>';
+  document.getElementById('playoffs-bracket').innerHTML = html;
+}
+
+function renderSeries(m, isFinals) {
+  const hw = m.wins[0], aw = m.wins[1];
+  const hasData = hw > 0 || aw > 0;
+  const winner = hw >= 4 ? 'home' : aw >= 4 ? 'away' : null;
+  const homeName = abbr(m.home);
+  const awayName = abbr(m.away);
+  const w1 = winner === 'home' ? 'winner' : winner === 'away' ? 'loser' : '';
+  const w2 = winner === 'away' ? 'winner' : winner === 'home' ? 'loser' : '';
+  const scoreStr = hasData ? `${hw}–${aw}` : '–';
+
+  let html = `<div class="b-match${isFinals?' is-finals':''}">`;
+  if(isFinals) html += `<div class="finals-header">🏆 FINALES NBA 2025</div>`;
+  html += `<div class="b-team ${w1}">
+    <span class="b-seed">${m.homeS}</span>
+    <span class="b-name">${homeName}</span>
+    <span class="b-wins${!hasData?' tbd':''}">${hasData?hw:'TBD'}</span>
+  </div>`;
+  html += `<div class="b-team ${w2}">
+    <span class="b-seed">${m.awayS}</span>
+    <span class="b-name">${awayName}</span>
+    <span class="b-wins${!hasData?' tbd':''}">${hasData?aw:'TBD'}</span>
+  </div>`;
+  if(hasData) {
+    html += `<div class="b-series">Serie: <span class="b-series-val">${scoreStr}</span></div>`;
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderAll() {
+  renderConf('east');
+  renderConf('west');
+  renderPlayoffsBracket();
+}
+
+// ══════════════════════════════════════════════════════════
+//  ADMIN: PARTIDO
+// ══════════════════════════════════════════════════════════
+function fillAllTeams() {
+  const allTeams = [...state.east.map(t=>({...t,conf:'east'})), ...state.west.map(t=>({...t,conf:'west'}))];
+  allTeams.sort((a,b) => TEAMS_META[a.id].name.localeCompare(TEAMS_META[b.id].name));
+  ['ag-home','ag-away'].forEach(selId => {
+    const sel = document.getElementById(selId);
+    sel.innerHTML = allTeams.map(t => `<option value="${t.id}">${TEAMS_META[t.id].abbr} – ${TEAMS_META[t.id].name}</option>`).join('');
+  });
+  document.getElementById('ag-away').selectedIndex = 1;
+}
+
+document.getElementById('btn-game-reg').addEventListener('click', () => {
+  const hId = document.getElementById('ag-home').value;
+  const aId = document.getElementById('ag-away').value;
+  const hpts = parseInt(document.getElementById('ag-hpts').value)||0;
+  const apts = parseInt(document.getElementById('ag-apts').value)||0;
+  const fb = document.getElementById('fb-game');
+  if(hId === aId) { showFb(fb, 'Local y visitante iguales', true); return; }
+  const hConf = TEAMS_META[hId].conf;
+  const aConf = TEAMS_META[aId].conf;
+  const ht = state[hConf].find(t => t.id === hId);
+  const at = state[aConf].find(t => t.id === aId);
+  if(!ht || !at) return;
+  ht.pj++; at.pj++;
+  if(hpts > apts) { ht.w++; at.l++; }
+  else            { at.w++; ht.l++; }
+  // Update rolling PPA/PPP approximate (simple rolling average)
+  const prevHGames = ht.pj - 1;
+  ht.ppa = parseFloat(((ht.ppa * prevHGames + hpts) / ht.pj).toFixed(1));
+  ht.ppp = parseFloat(((ht.ppp * prevHGames + apts) / ht.pj).toFixed(1));
+  const prevAGames = at.pj - 1;
+  at.ppa = parseFloat(((at.ppa * prevAGames + apts) / at.pj).toFixed(1));
+  at.ppp = parseFloat(((at.ppp * prevAGames + hpts) / at.pj).toFixed(1));
+  renderConf(hConf); renderConf(aConf); persistState();
+  showFb(fb, `✓ ${TEAMS_META[hId].abbr} ${hpts}–${apts} ${TEAMS_META[aId].abbr}`);
+});
+
+// ══════════════════════════════════════════════════════════
+//  ADMIN: PLAYOFFS / PLAY-IN
+// ══════════════════════════════════════════════════════════
+const apSection = document.getElementById('ap-section');
+const apConf    = document.getElementById('ap-conf');
+const apRound   = document.getElementById('ap-round');
+const apMatch   = document.getElementById('ap-match');
+
+function togglePlayoffFields() {
+  const v = apSection.value;
+  document.getElementById('ap-playin-fields').style.display  = v==='playin'   ? 'block' : 'none';
+  document.getElementById('ap-playoffs-fields').style.display = v==='playoffs' ? 'block' : 'none';
+  document.getElementById('ap-finals-fields').style.display  = v==='finals'   ? 'block' : 'none';
+}
+apSection.addEventListener('change', () => { togglePlayoffFields(); fillPlayoffMatches(); });
+
+function fillPlayoffMatches() {
+  if(!apConf || !apRound) return;
+  const matches = state.playoffs[apConf.value]?.[apRound.value] || [];
+  apMatch.innerHTML = matches.map((m,i)=>`<option value="${i}">${abbr(m.home)} vs ${abbr(m.away)}</option>`).join('');
+}
+apConf.addEventListener('change', fillPlayoffMatches);
+apRound.addEventListener('change', fillPlayoffMatches);
+
+// Play-in register
+document.getElementById('btn-pi-reg').addEventListener('click', () => {
+  const confKey  = document.getElementById('ap-pi-conf').value;
+  const gameKey  = document.getElementById('ap-pi-game').value;
+  const h = parseInt(document.getElementById('ap-pi-h').value)||0;
+  const a = parseInt(document.getElementById('ap-pi-a').value)||0;
+  const fb = document.getElementById('fb-pi');
+  if(h === a) { showFb(fb, 'Empate no permitido en NBA', true); return; }
+  const game = state.playin[confKey][gameKey];
+  game.score = [h, a];
+  renderPlayoffsBracket(); persistState();
+  showFb(fb, `✓ ${abbr(game.home)} ${h}–${a} ${abbr(game.away)}`);
+});
+
+// Playoffs series register
+document.getElementById('btn-playoffs-reg').addEventListener('click', () => {
+  const confKey  = apConf.value;
+  const roundKey = apRound.value;
+  const mi = parseInt(apMatch.value);
+  const hw = parseInt(document.getElementById('ap-hw').value)||0;
+  const aw = parseInt(document.getElementById('ap-aw').value)||0;
+  const fb = document.getElementById('fb-playoffs');
+  const m = state.playoffs[confKey]?.[roundKey]?.[mi];
+  if(!m) return;
+  m.wins = [hw, aw];
+  renderPlayoffsBracket(); persistState();
+  showFb(fb, `✓ ${abbr(m.home)} ${hw}–${aw} ${abbr(m.away)}`);
+});
+
+// Finals register
+document.getElementById('btn-finals-reg').addEventListener('click', () => {
+  const we = parseInt(document.getElementById('ap-fw-e').value)||0;
+  const wo = parseInt(document.getElementById('ap-fw-o').value)||0;
+  const fb = document.getElementById('fb-finals');
+  state.playoffs.finals[0].wins = [we, wo];
+  renderPlayoffsBracket(); persistState();
+  showFb(fb, `✓ Este ${we}–${wo} Oeste`);
+});
+
+// ══════════════════════════════════════════════════════════
+//  EXPORT / IMPORT / RESET
+// ══════════════════════════════════════════════════════════
+document.getElementById('btn-export').addEventListener('click', () => {
+  const fb = document.getElementById('fb-settings');
+  try {
+    const blob = new Blob([JSON.stringify({version:1,exportedAt:new Date().toISOString(),data:state},null,2)],{type:'application/json'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `nbatracker_${new Date().toISOString().slice(0,10)}.json`;
+    a.click(); URL.revokeObjectURL(a.href);
+    showFb(fb,'✓ Datos exportados');
+  } catch { showFb(fb,'✗ Error al exportar',true); }
+});
+
+document.getElementById('btn-import').addEventListener('change', ev => {
+  const fb = document.getElementById('fb-settings');
+  const file = ev.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      const payload = parsed.data || parsed;
+      if(!payload.east || !payload.west || !payload.playoffs) throw new Error();
+      if(!confirm(`¿Reemplazar todos los datos?\n\nNo se puede deshacer.`)){ ev.target.value=''; return; }
+      state.east = payload.east;
+      state.west = payload.west;
+      state.playin = payload.playin || JSON.parse(JSON.stringify(DEFAULT_PLAYIN));
+      state.playoffs = payload.playoffs;
+      fillAllTeams(); fillPlayoffMatches(); renderAll(); persistState();
+      showFb(fb,`✓ Importado`);
+    } catch { showFb(fb,'✗ Archivo inválido',true); }
+    ev.target.value = '';
+  };
+  reader.readAsText(file);
+});
+
+document.getElementById('btn-reset').addEventListener('click', () => {
+  const fb = document.getElementById('fb-settings');
+  if(!confirm('¿Resetear TODOS los datos?\n\nNo se puede deshacer.')) return;
+  state.east = JSON.parse(JSON.stringify(DEFAULT_EAST));
+  state.west = JSON.parse(JSON.stringify(DEFAULT_WEST));
+  state.playin = JSON.parse(JSON.stringify(DEFAULT_PLAYIN));
+  state.playoffs = JSON.parse(JSON.stringify(DEFAULT_PLAYOFFS));
+  fillAllTeams(); fillPlayoffMatches(); renderAll(); persistState();
+  showFb(fb,'✓ Datos reseteados');
+});
+
+// ══════════════════════════════════════════════════════════
+//  NAV + ADMIN
+// ══════════════════════════════════════════════════════════
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.section').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.section).classList.add('active');
+  });
+});
+document.getElementById('adminBtn').addEventListener('click', () => document.getElementById('adminPanel').classList.toggle('open'));
+document.getElementById('adminClose').addEventListener('click', () => document.getElementById('adminPanel').classList.remove('open'));
+document.addEventListener('click', e => {
+  const panel = document.getElementById('adminPanel'), btn = document.getElementById('adminBtn');
+  if(panel.classList.contains('open') && !panel.contains(e.target) && e.target !== btn) panel.classList.remove('open');
+});
+document.querySelectorAll('.ap-tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.ap-tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.ap-section').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('atab-'+t.dataset.atab).classList.add('active');
+  });
+});
+
+// ══════════════════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════════════════
+function boot() {
+  try {
+    const saved = JSON.parse(localStorage.getItem('nbatracker_local') || 'null');
+    if(saved && saved.east && saved.west && saved.playoffs) {
+      state.east = saved.east;
+      state.west = saved.west;
+      state.playin = saved.playin || JSON.parse(JSON.stringify(DEFAULT_PLAYIN));
+      state.playoffs = saved.playoffs;
+    }
+  } catch {}
+  fillAllTeams();
+  fillPlayoffMatches();
+  togglePlayoffFields();
+  document.getElementById('loadingOverlay').classList.add('hidden');
+  renderAll();
+}
+boot();
+</script>
+</body>
+</html>
