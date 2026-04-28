@@ -879,7 +879,41 @@ function renderPlayoffsBracket() {
     const seed8 = g3 ? (g3[0]>g3[1] ? pi.g3.home : pi.g3.away) : 'TBD';
     if(!r1[0].wins[0] && !r1[0].wins[1]) { r1[0].away = seed8; r1[0].awayS = 8; }
     if(!r1[2].wins[0] && !r1[2].wins[1]) { r1[2].away = seed7; r1[2].awayS = 7; }
+
+    // ── Propagate R1 winners → Semis ──────────────────────────
+    // Helper: given a series, return the winning team id (or null)
+    const seriesWinner = m => m.wins[0] >= 4 ? m.home : m.wins[1] >= 4 ? m.away : null;
+    const seriesWinnerS = m => m.wins[0] >= 4 ? m.homeS : m.wins[1] >= 4 ? m.awayS : null;
+    const seriesLoserS  = m => m.wins[0] >= 4 ? m.awayS : m.wins[1] >= 4 ? m.homeS : null;
+
+    const cd = p[confKey];
+
+    // semi[0]: winner of r1[0] (1v8) vs winner of r1[1] (4v5)  — top half
+    const w_r1_0 = seriesWinner(r1[0]); const ws_r1_0 = seriesWinnerS(r1[0]);
+    const w_r1_1 = seriesWinner(r1[1]); const ws_r1_1 = seriesWinnerS(r1[1]);
+    if(w_r1_0 && (!cd.semi[0].wins[0] && !cd.semi[0].wins[1])) { cd.semi[0].home = w_r1_0; cd.semi[0].homeS = ws_r1_0; }
+    if(w_r1_1 && (!cd.semi[0].wins[0] && !cd.semi[0].wins[1])) { cd.semi[0].away = w_r1_1; cd.semi[0].awayS = ws_r1_1; }
+
+    // semi[1]: winner of r1[2] (2v7) vs winner of r1[3] (3v6)  — bottom half
+    const w_r1_2 = seriesWinner(r1[2]); const ws_r1_2 = seriesWinnerS(r1[2]);
+    const w_r1_3 = seriesWinner(r1[3]); const ws_r1_3 = seriesWinnerS(r1[3]);
+    if(w_r1_2 && (!cd.semi[1].wins[0] && !cd.semi[1].wins[1])) { cd.semi[1].home = w_r1_2; cd.semi[1].homeS = ws_r1_2; }
+    if(w_r1_3 && (!cd.semi[1].wins[0] && !cd.semi[1].wins[1])) { cd.semi[1].away = w_r1_3; cd.semi[1].awayS = ws_r1_3; }
+
+    // ── Propagate Semis winners → Final de Conf ───────────────
+    const w_semi_0 = seriesWinner(cd.semi[0]); const ws_semi_0 = seriesWinnerS(cd.semi[0]);
+    const w_semi_1 = seriesWinner(cd.semi[1]); const ws_semi_1 = seriesWinnerS(cd.semi[1]);
+    if(w_semi_0 && (!cd.conf[0].wins[0] && !cd.conf[0].wins[1])) { cd.conf[0].home = w_semi_0; cd.conf[0].homeS = ws_semi_0; }
+    if(w_semi_1 && (!cd.conf[0].wins[0] && !cd.conf[0].wins[1])) { cd.conf[0].away = w_semi_1; cd.conf[0].awayS = ws_semi_1; }
   });
+
+  // ── Propagate Conf Finals winners → Finales NBA ───────────
+  const seriesWinnerF = m => m.wins[0] >= 4 ? m.home : m.wins[1] >= 4 ? m.away : null;
+  const seriesWinnerSF = m => m.wins[0] >= 4 ? m.homeS : m.wins[1] >= 4 ? m.awayS : null;
+  const w_east_conf = seriesWinnerF(p.east.conf[0]); const ws_east_conf = seriesWinnerSF(p.east.conf[0]);
+  const w_west_conf = seriesWinnerF(p.west.conf[0]); const ws_west_conf = seriesWinnerSF(p.west.conf[0]);
+  if(w_east_conf && (!p.finals[0].wins[0] && !p.finals[0].wins[1])) { p.finals[0].home = w_east_conf; p.finals[0].homeS = ws_east_conf; }
+  if(w_west_conf && (!p.finals[0].wins[0] && !p.finals[0].wins[1])) { p.finals[0].away = w_west_conf; p.finals[0].awayS = ws_west_conf; }
 
   let html = '<div class="bracket-outer">';
 
